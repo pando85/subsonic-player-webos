@@ -160,6 +160,26 @@ body.webosTV form button[type='submit'] {
 }
 
 /* ============================================
+   Hide "See All" Links - Not useful on TV
+   ============================================ */
+
+/* Hide the mobile "See all" text links */
+body.webosTV a.mobileOnly.link {
+  display: none !important;
+}
+
+/* Hide the header section links (both desktop and mobile "See all") */
+body.webosTV h3 a {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+/* Hide the "more" icon specifically */
+body.webosTV h3 a svg {
+  display: none !important;
+}
+
+/* ============================================
    Simple Focus States for TV Remote
    Uses theme color - works with light/dark themes
    ============================================ */
