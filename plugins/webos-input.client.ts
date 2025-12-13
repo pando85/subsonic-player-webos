@@ -25,11 +25,15 @@ export default defineNuxtPlugin((nuxtApp) => {
     return;
   }
 
-  console.log('[webOS Input] Plugin loaded, isWebOS:', isWebOS);
+  // Check if we're on a file system path and need to redirect
+  const currentPath = window.location.pathname;
+  if (currentPath.includes('/media/')) {
+    const router = useRouter();
+    router.replace('/');
+  }
 
   // Add webosTV class to body for TV-specific CSS styles
   document.body.classList.add('webosTV');
-  console.log('[webOS Input] Added webosTV class to body');
 
   // Force tablet responsive design by setting viewport to tablet width
   // This triggers CSS media queries like @media (width >= 769px) for --tablet-up
@@ -37,7 +41,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   const viewport = document.querySelector('meta[name="viewport"]');
   if (viewport) {
     viewport.setAttribute('content', 'width=1024, initial-scale=1');
-    console.log('[webOS Input] Set viewport to tablet width (1024px)');
   }
 
   /**
@@ -269,7 +272,6 @@ export default defineNuxtPlugin((nuxtApp) => {
    * Simple linear navigation (fallback)
    */
   function navigateLinear(amount: number): void {
-    console.log('[webOS Input] Navigating linear:', amount);
     const allElements = getFocusableElements();
 
     if (allElements.length === 0) return;
@@ -333,7 +335,6 @@ export default defineNuxtPlugin((nuxtApp) => {
    * Handle back button
    */
   function handleBack(): void {
-    console.log('[webOS Input] Back button pressed');
 
     // Try to use webOS platform back if available
     if (
@@ -388,7 +389,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       const playAllButton = document.getElementById('play-all-button');
       if (playAllButton && isVisible(playAllButton)) {
         playAllButton.focus();
-        console.log('[webOS Input] Initial focus on Play All button');
         return;
       }
 
@@ -435,7 +435,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Fallback to first focusable element
     if (allElements.length > 0) {
       allElements[0].focus();
-      console.log('[webOS Input] Fallback focus on first element');
     }
   }
 
@@ -447,7 +446,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     const key = evt.key;
 
     // Log for debugging
-    console.log('[webOS Input] Key pressed:', { key, keyCode });
 
     switch (keyCode) {
       case 10009: // Samsung/Tizen Back button
@@ -532,5 +530,4 @@ export default defineNuxtPlugin((nuxtApp) => {
     subtree: true,
   });
 
-  console.log('[webOS Input] TV navigation plugin initialized');
 });
