@@ -35,6 +35,94 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Add webosTV class to body for TV-specific CSS styles
   document.body.classList.add('webosTV');
 
+  // Setup search input toggle behavior for TV (with retry logic)
+  const setupSearchToggle = () => {
+    let searchExpanded = false;
+    let isProcessing = false; // Prevent double-click
+
+    // Find search input first, then traverse to form (avoid :has() selector)
+    const searchInput = document.getElementById(
+      'search-input',
+    ) as HTMLInputElement;
+    const searchForm = searchInput?.closest('form') as HTMLFormElement;
+    const searchWrapper = searchInput?.parentElement as HTMLElement;
+    const searchButton = searchForm?.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
+
+    if (!searchForm || !searchInput || !searchButton || !searchWrapper) {
+      // Retry after DOM is ready
+      setTimeout(setupSearchToggle, 500);
+      return;
+    }
+
+    // Add a custom class to the wrapper for targeting with CSS
+    searchWrapper.classList.add('webos-search-wrapper');
+
+    console.log('[webOS Search] Setup complete', {
+      searchForm,
+      searchInput,
+      searchWrapper,
+      searchButton,
+    });
+
+    // Handle search button click with debounce
+    searchButton.addEventListener('click', (evt) => {
+      // Prevent double-firing from TV remote
+      if (isProcessing) {
+        evt.preventDefault();
+        console.log('[webOS Search] Ignoring duplicate click');
+        return;
+      }
+
+      console.log('[webOS Search] Button clicked, expanded:', searchExpanded);
+
+      if (!searchExpanded) {
+        // Expand search input
+        evt.preventDefault();
+        isProcessing = true;
+        searchExpanded = true;
+        searchForm.classList.add('searchExpanded');
+        console.log(
+          '[webOS Search] Expanding search, classes:',
+          searchForm.className,
+        );
+
+        // Small delay before allowing next action and focusing
+        setTimeout(() => {
+          searchInput.focus();
+          searchInput.select();
+          isProcessing = false;
+        }, 100);
+      } else {
+        // If expanded, let the form submit normally (search)
+        console.log(
+          '[webOS Search] Submitting search with value:',
+          searchInput.value,
+        );
+        // Don't prevent default - let form submit
+      }
+    });
+
+    // Handle focus loss to collapse search
+    searchInput.addEventListener('blur', () => {
+      if (searchExpanded) {
+        console.log('[webOS Search] Input lost focus, collapsing');
+        searchExpanded = false;
+        searchForm.classList.remove('searchExpanded');
+      }
+    });
+
+    // Keep search button from triggering blur when clicking it
+    searchButton.addEventListener('mousedown', (evt) => {
+      if (searchExpanded) {
+        evt.preventDefault(); // Prevent blur
+      }
+    });
+  };
+
+  setupSearchToggle();
+
   // Force tablet responsive design by setting viewport to tablet width
   // This triggers CSS media queries like @media (width >= 769px) for --tablet-up
   // but we disable hover effects via CSS since TV has no mouse
@@ -335,7 +423,6 @@ export default defineNuxtPlugin((nuxtApp) => {
    * Handle back button
    */
   function handleBack(): void {
-
     // Try to use webOS platform back if available
     if (
       'webOS' in window &&
@@ -529,5 +616,4 @@ export default defineNuxtPlugin((nuxtApp) => {
     childList: true,
     subtree: true,
   });
-
 });
