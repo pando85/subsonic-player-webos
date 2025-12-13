@@ -9,7 +9,7 @@
  * - Enter/OK key for activation
  * - Back button support (webOS key code 461)
  * - Spatial navigation between focusable elements
- * - Works with both file:// protocol (webOS) and http:// (browser testing)
+ * - Only active on webOS (file:// protocol)
  */
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -17,15 +17,48 @@ export default defineNuxtPlugin((nuxtApp) => {
     return;
   }
 
-  // Check if we're on webOS (file:// protocol) or allow for browser testing
+  // Check if we're on webOS (file:// protocol)
   const isWebOS = window.location.protocol === 'file:';
+
+  // Only activate for webOS TV environment
+  if (!isWebOS) {
+    return;
+  }
 
   console.log('[webOS Input] Plugin loaded, isWebOS:', isWebOS);
 
   // Add webos-tv class to body for TV-specific CSS styles
-  if (isWebOS) {
-    document.body.classList.add('webos-tv');
-    console.log('[webOS Input] Added webos-tv class to body');
+  document.body.classList.add('webos-tv');
+  console.log('[webOS Input] Added webos-tv class to body');
+
+  // Force tablet responsive design by setting viewport to tablet width
+  // This triggers CSS media queries like @media (width >= 769px) for --tablet-up
+  // but we disable hover effects via CSS since TV has no mouse
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    viewport.setAttribute('content', 'width=1024, initial-scale=1');
+    console.log('[webOS Input] Set viewport to tablet width (1024px)');
+  }
+
+  /**
+   * Check if an element should be skipped for TV navigation
+   * We skip links inside layoutContent (album titles, artist names)
+   * to allow jumping directly between album images
+   */
+  function shouldSkipElement(element: Element): boolean {
+    // Skip links/buttons inside layoutContent (album title, artist links)
+    const layoutContent = element.closest('.layoutContent');
+    if (layoutContent) {
+      return true;
+    }
+
+    // Skip elements inside hidden action buttons
+    const actions = element.closest('[class*="actions"]');
+    if (actions) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -34,7 +67,28 @@ export default defineNuxtPlugin((nuxtApp) => {
   function isVisible(element: Element): boolean {
     if (!element) return false;
     const el = element as HTMLElement;
-    return el.offsetWidth > 0 && el.offsetHeight > 0;
+
+    // Check if element or its parent has dimensions
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return true;
+    }
+
+    // Fallback to offset dimensions
+    if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+      return true;
+    }
+
+    // For anchor tags, check if they have visible children
+    if (el.tagName === 'A') {
+      const firstChild = el.firstElementChild;
+      if (firstChild) {
+        const childRect = firstChild.getBoundingClientRect();
+        return childRect.width > 0 && childRect.height > 0;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -53,7 +107,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     ].join(',');
 
     const elements = document.querySelectorAll(selectors);
-    return Array.from(elements).filter((el) => isVisible(el)) as HTMLElement[];
+    return Array.from(elements).filter(
+      (el) => isVisible(el) && !shouldSkipElement(el),
+    ) as HTMLElement[];
   }
 
   /**

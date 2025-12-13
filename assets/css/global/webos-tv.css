@@ -1,245 +1,84 @@
 /**
  * webOS TV Optimizations
+ *
+ * Simple styles for TV navigation.
+ * Uses the .webos-tv body class added dynamically when running on webOS.
  * 
- * This stylesheet provides TV-optimized styles including:
- * - High-visibility focus states
- * - Larger touch targets
- * - Improved readability on 10-foot displays
- * 
- * Note: These styles are applied globally but are designed to enhance
- * TV navigation without breaking the regular web experience.
- * The more aggressive styles use the .webos-tv body class which is
- * added dynamically when running on webOS.
+ * Note: Tablet layout is triggered by setting viewport width to 1024px
+ * in the webos-input plugin. Hover effects are disabled since TV has no mouse.
  */
 
 /* ============================================
-   Focus States - Critical for TV Navigation
-   These are always applied for accessibility
+   Hide cursor on TV
    ============================================ */
 
-/* Enhanced focus style - highly visible */
-:focus-visible {
-  outline: 3px solid var(--theme-color-light) !important;
-  outline-offset: 3px !important;
-  box-shadow: 0 0 0 5px var(--theme-color)  !important;
-}
-
-/* Focus for buttons and links */
-button:focus-visible,
-a:focus-visible,
-[role='button']:focus-visible {
-  outline: 3px solid var(--theme-color-light)  !important;
-  outline-offset: 3px !important;
-  box-shadow: 0 0 0 5px var(--theme-color)  !important;
-  transform: scale(1.02);
-  transition:
-    transform 0.15s ease-out,
-    box-shadow 0.15s ease-out;
-}
-
-/* Focus for form elements */
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid var(--theme-color-light)  !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px var(--theme-color)  !important;
-}
-
-/* ============================================
-   webOS-specific styles (applied via body class)
-   These are more aggressive TV optimizations
-   ============================================ */
-
-/* When running on webOS TV */
-body.webos-tv {
-  /* Hide mouse cursor on TV */
-  cursor: none !important;
-}
-
+body.webos-tv,
 body.webos-tv * {
   cursor: none !important;
 }
 
-/* Re-enable cursor for inputs on webOS */
 body.webos-tv input,
 body.webos-tv textarea,
 body.webos-tv select {
   cursor: text !important;
 }
 
-/* Stronger focus states for TV */
+/* ============================================
+   Simple Focus States for TV Remote
+   Uses theme color - works with light/dark themes
+   ============================================ */
+
 body.webos-tv :focus,
 body.webos-tv :focus-visible {
-  outline: 4px solid var(--theme-color-light) !important;
-  outline-offset: 4px !important;
-  box-shadow: 0 0 0 8px var(--theme-color)  !important;
+  outline: 3px solid var(--theme-color, #6313bc) !important;
+  outline-offset: 2px !important;
 }
 
-body.webos-tv button:focus,
-body.webos-tv a:focus,
-body.webos-tv [role='button']:focus {
-  transform: scale(1.05);
-  transition: transform 0.2s ease-out;
+/* Enhanced focus for album/artist/playlist image links */
+body.webos-tv .layoutImage a:focus,
+body.webos-tv .layoutImage a:focus-visible {
+  display: block;
+  outline: 4px solid var(--theme-color, #6313bc) !important;
+  outline-offset: 3px !important;
+  border-radius: var(--border-radius-large);
 }
 
-/* Larger touch targets for TV */
-body.webos-tv button,
-body.webos-tv a,
-body.webos-tv [role='button'],
-body.webos-tv input[type='button'],
-body.webos-tv input[type='submit'] {
-  min-height: 48px;
-  min-width: 48px;
-}
-
-/* Scale up font size for TV viewing distance */
-body.webos-tv {
-  font-size: 18px;
-  line-height: 1.6;
-}
-
-/* Safe area padding for TV overscan */
-body.webos-tv {
-  padding: 24px;
-  padding: env(safe-area-inset-top, 24px) env(safe-area-inset-right, 24px)
-    env(safe-area-inset-bottom, 24px) env(safe-area-inset-left, 24px);
+/* Ensure album image links are block-level for proper focus and dimensions */
+body.webos-tv .layoutImage a {
+  display: block;
 }
 
 /* ============================================
-   Scroll Behavior - Always applied
+   Disable hover effects on TV (no mouse)
+   Hide elements that only appear on hover
    ============================================ */
 
-/* Smooth scrolling for DPAD navigation */
-html {
+/* Hide hover-only action buttons (like play/favourite on albums) */
+body.webos-tv [class*='actions'] {
+  display: none !important;
+}
+
+/* ============================================
+   Simplified Navigation for Albums/Artists/etc
+   Only album images are focusable, not titles or artist links
+   ============================================ */
+
+/* Make title/artist links inside layout items not interactive */
+body.webos-tv .layoutContent a,
+body.webos-tv .layoutContent button {
+  pointer-events: none;
+}
+
+/* Ensure these links can't receive focus */
+body.webos-tv .layoutContent a:focus,
+body.webos-tv .layoutContent button:focus {
+  outline: none !important;
+}
+
+/* ============================================
+   Smooth scrolling
+   ============================================ */
+
+body.webos-tv {
   scroll-behavior: smooth;
-}
-
-/* ============================================
-   Scrollbar Styles
-   ============================================ */
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-/* ============================================
-   Animation Performance - webOS specific
-   ============================================ */
-
-/* Reduce animations for better TV performance */
-body.webos-tv *,
-body.webos-tv *::before,
-body.webos-tv *::after {
-  animation-duration: 0.2s !important;
-  transition-duration: 0.2s !important;
-}
-
-/* Use GPU acceleration for focus transitions */
-body.webos-tv button:focus,
-body.webos-tv a:focus {
-  will-change: transform;
-}
-
-/* ============================================
-   Grid & Layout Adjustments for TV
-   ============================================ */
-
-body.webos-tv .grid {
-  gap: 24px;
-}
-
-/* ============================================
-   Audio Player Controls - TV optimized
-   ============================================ */
-
-body.webos-tv .audio-player button,
-body.webos-tv [class*='player'] button {
-  min-width: 56px;
-  min-height: 56px;
-}
-
-/* ============================================
-   List & Navigation Styles
-   ============================================ */
-
-/* Make active/current items more obvious */
-.active,
-[aria-current='page'] {
-  position: relative;
-}
-
-body.webos-tv .active::before,
-body.webos-tv [aria-current='page']::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 80%;
-  background: var(--theme-color-light) ;
-  border-radius: 2px;
-}
-
-/* ============================================
-   Form Elements - TV optimized
-   ============================================ */
-
-body.webos-tv input,
-body.webos-tv select,
-body.webos-tv textarea {
-  font-size: 1.125rem;
-  padding: 14px 18px;
-  min-height: 52px;
-}
-
-/* ============================================
-   Accessibility - Always applied
-   ============================================ */
-
-/* Skip to main content link */
-.skip-to-main {
-  position: absolute;
-  top: -100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--theme-color-light);
-  color: white;
-  padding: 12px 24px;
-  text-decoration: none;
-  z-index: 9999;
-  border-radius: 0 0 8px 8px;
-  transition: top 0.2s ease;
-}
-
-.skip-to-main:focus {
-  top: 0;
-}
-
-/* Screen reader only text */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
 }
