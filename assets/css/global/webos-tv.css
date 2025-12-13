@@ -21,7 +21,7 @@
 :focus-visible {
   outline: 3px solid var(--theme-color-light) !important;
   outline-offset: 3px !important;
-  box-shadow: 0 0 0 5px rgba(0, 170, 255, 0.25) !important;
+  box-shadow: 0 0 0 5px var(--theme-color)  !important;
 }
 
 /* Focus for buttons and links */
@@ -30,7 +30,7 @@ a:focus-visible,
 [role='button']:focus-visible {
   outline: 3px solid var(--theme-color-light)  !important;
   outline-offset: 3px !important;
-  box-shadow: 0 0 0 5px rgba(0, 170, 255, 0.25) !important;
+  box-shadow: 0 0 0 5px var(--theme-color)  !important;
   transform: scale(1.02);
   transition:
     transform 0.15s ease-out,
@@ -43,7 +43,7 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid var(--theme-color-light)  !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px rgba(0, 170, 255, 0.2) !important;
+  box-shadow: 0 0 0 4px var(--theme-color)  !important;
 }
 
 /* ============================================
@@ -73,7 +73,7 @@ body.webos-tv :focus,
 body.webos-tv :focus-visible {
   outline: 4px solid var(--theme-color-light) !important;
   outline-offset: 4px !important;
-  box-shadow: 0 0 0 8px rgba(0, 170, 255, 0.35) !important;
+  box-shadow: 0 0 0 8px var(--theme-color)  !important;
 }
 
 body.webos-tv button:focus,
