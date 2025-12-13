@@ -13,19 +13,48 @@ export function useArtist() {
   }
 
   /* istanbul ignore next -- @preserve */
-  function getArtist(id: string) {
-    const route = useRoute();
+  async function getArtist(id: string) {
+    // Fetch all artist data in parallel
+    const [artistInfoResponse, artistResponse] = await Promise.all([
+      fetchData('/getArtistInfo2', {
+        params: { id },
+      }),
+      fetchData('/getArtist', {
+        params: { id },
+      }),
+    ]);
 
-    return useFetch('/api/artist', {
-      default: () => null,
-      getCachedData: (key, nuxtApp) =>
-        nuxtApp.payload.data[key] || nuxtApp.static.data[key],
-      key: route.fullPath,
-      params: {
-        id,
-      },
-      transform: (response) => response.data,
-    });
+    if (!artistInfoResponse.data || !artistResponse.data) {
+      return { data: null };
+    }
+
+    // Fetch additional data based on the artist
+    const [similarSongsResponse, topSongsResponse] = await Promise.all([
+      fetchData('/getSimilarSongs2', {
+        params: {
+          count: PREVIEW_TRACK_COUNT,
+          id,
+        },
+      }),
+      fetchData('/getTopSongs', {
+        params: {
+          artist: artistResponse.data.artist.name,
+          count: PREVIEW_TRACK_COUNT,
+        },
+      }),
+    ]);
+
+    // Merge all artist data
+    const mergedArtists = {
+      ...artistInfoResponse.data.artistInfo2,
+      ...artistResponse.data.artist,
+      similarSongs: similarSongsResponse.data?.similarSongs2?.song,
+      topSongs: topSongsResponse.data?.topSongs?.song,
+    };
+
+    return {
+      data: formatArtist(mergedArtists),
+    };
   }
 
   return {
