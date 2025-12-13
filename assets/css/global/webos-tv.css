@@ -76,6 +76,36 @@ body.webosTV .layoutContent button:focus {
 }
 
 /* ============================================
+   Enhanced Track Row Focus for Navigation
+   Make focused track rows clearly visible
+   ============================================ */
+
+/* When a button inside a track row has focus, highlight the entire row */
+body.webosTV .trackRow:focus-within {
+  position: relative;
+  z-index: 1;
+  background-color: color-mix(
+    in oklab,
+    var(--theme-color, #6313bc) 20%,
+    transparent
+  ) !important;
+}
+
+/* Extra emphasis on the focused play button */
+body.webosTV .trackRow button:focus,
+body.webosTV .trackRow button:focus-visible {
+  outline: 4px solid var(--theme-color-light) !important;
+  outline-offset: 2px !important;
+  background-color: color-mix(
+    in oklab,
+    var(--theme-color-light, #6313bc) 80%,
+    var(--black-color)
+  ) !important;
+  border-radius: 50%;
+  transform: scale(1.15);
+}
+
+/* ============================================
    Smooth scrolling
    ============================================ */
 

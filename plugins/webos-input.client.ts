@@ -237,9 +237,14 @@ export default defineNuxtPlugin((nuxtApp) => {
 
       if (!isInDirection) continue;
 
-      // Score: prioritize elements that are more aligned with the direction
-      // Lower score = better match
-      const score = primaryDistance + secondaryDistance * 2;
+      let score;
+      if (direction === 'left' || direction === 'right') {
+        // Horizontal navigation: prioritize horizontal alignment
+        score = primaryDistance + secondaryDistance * 30;
+      } else {
+        // Vertical navigation: prioritize vertical alignment
+        score = primaryDistance + secondaryDistance * 3;
+      }
 
       if (score < bestScore) {
         bestScore = score;
