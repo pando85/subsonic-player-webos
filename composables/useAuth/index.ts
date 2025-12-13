@@ -8,13 +8,10 @@ export function useAuth() {
   const error = ref<null | string>(null);
   const isAuthenticated = useState(STATE_NAMES.userAuthenticated, () => false);
 
-  // Initialize user from stored auth token (only on client side)
-  if (import.meta.client) {
-    const storedToken = getAuthToken();
-    if (storedToken) {
-      user.value = loadSession(storedToken);
-    }
-  }
+  // Initialize user from stored auth token
+  // Always call loadSession to maintain consistent behavior (returns null values if no token)
+  const storedToken = getAuthToken();
+  user.value = loadSession(storedToken ?? '');
 
   function logout() {
     clearNuxtData();
