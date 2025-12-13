@@ -40,14 +40,18 @@ const formInputs = {
 const form = createForm(formInputs);
 
 async function onFormSubmit() {
+  console.log('[LoginForm] onFormSubmit called');
   validateInputs(form);
+  console.log('[LoginForm] Form valid:', form.isValid.value);
 
   if (!form.isValid.value) {
+    console.log('[LoginForm] Form validation failed');
     return;
   }
 
   const { password, server, username } = form.fields;
 
+  console.log('[LoginForm] Emitting submit with server:', server.value.value);
   emit('submit', {
     password: password.value.value as string,
     server: server.value.value as string,

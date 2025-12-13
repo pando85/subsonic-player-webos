@@ -36,6 +36,10 @@ export default defineNuxtConfig({
     // Use relative base path for webOS file:// protocol compatibility
     baseURL: './',
     buildAssetsDir: '_nuxt/',
+    head: {
+      // For webOS builds, we'll strip crossorigin attributes via post-processing
+      // since file:// protocol doesn't support CORS
+    },
   },
   builder: 'vite',
   compatibilityDate: '2024-04-03',
@@ -51,6 +55,10 @@ export default defineNuxtConfig({
     payloadExtraction: false,
     // Disable app manifest - it uses fetch() which fails on file:// protocol
     appManifest: false,
+  },
+  features: {
+    // Disable inline styles to reduce complexity for webOS
+    inlineStyles: process.env.WEBOS_BUILD !== 'true',
   },
   imports: {
     dirs: IMPORT_DIRECTORIES,

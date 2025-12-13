@@ -29,6 +29,18 @@ find webos -name "*.html" -type f -exec sed -i 's|"/_nuxt/|"./_nuxt/|g; s|"/buil
 # Fix JavaScript module imports and fetch calls
 find webos -name "*.js" -type f -exec sed -i 's|"/_nuxt/|"./_nuxt/|g; s|'\''/_nuxt/|'\''./_nuxt/|g; s|"/builds/|"./builds/|g; s|'\''/builds/|'\''./builds/|g' {} \;
 
+# Step 3.6: Remove crossorigin attributes (file:// protocol doesn't support CORS)
+echo "🔧 Step 3.6: Removing crossorigin attributes for file:// compatibility..."
+find webos -name "*.html" -type f -exec sed -i 's| crossorigin||g' {} \;
+
+# Step 3.7: Removing modulepreload links...
+echo "🔧 Step 3.7: Removing modulepreload links..."
+find webos -name "*.html" -type f -exec sed -i 's|<link rel="modulepreload"[^>]*>||g' {} \;
+
+# Step 3.8: Fix runtime config baseURL in inline script
+echo "🔧 Step 3.8: Fixing runtime config baseURL..."
+find webos -name "*.html" -type f -exec sed -i 's|baseURL:"/"|baseURL:"./"|g' {} \;
+
 # Step 4: Create icons (using existing favicon)
 echo "🎨 Step 4: Creating webOS icons..."
 if [ -f "webos/favicon.svg" ]; then
