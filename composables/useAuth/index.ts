@@ -1,65 +1,5 @@
 import MD5 from 'crypto-js/md5';
 
-// Storage key constant (hardcoded to avoid import issues on webOS)
-const AUTH_STORAGE_KEY = 'subsonic_auth_params';
-
-// Helper to check if we're on webOS (file:// protocol)
-function isWebOS() {
-  if (!import.meta.client) return false;
-  try {
-    return window.location.protocol === 'file:';
-  } catch {
-    return false;
-  }
-}
-
-// Get auth token from localStorage (for webOS)
-function getAuthFromLocalStorage(): string | null {
-  if (!import.meta.client) return null;
-  try {
-    return window.localStorage.getItem(AUTH_STORAGE_KEY);
-  } catch (e) {
-    console.error('[useAuth] Error reading from localStorage:', e);
-    return null;
-  }
-}
-
-// Set auth token in localStorage (for webOS)
-function setAuthInLocalStorage(value: string | null) {
-  if (!import.meta.client) return;
-  try {
-    if (value) {
-      window.localStorage.setItem(AUTH_STORAGE_KEY, value);
-    } else {
-      window.localStorage.removeItem(AUTH_STORAGE_KEY);
-    }
-  } catch (e) {
-    console.error('[useAuth] Error writing to localStorage:', e);
-  }
-}
-
-// Get auth token from storage (localStorage for webOS, cookie for web)
-function getAuthToken(): string | null {
-  if (isWebOS()) {
-    return getAuthFromLocalStorage();
-  }
-  return useCookie(COOKIE_NAMES.auth).value ?? null;
-}
-
-// Set auth token in storage
-function setAuthToken(value: string | null) {
-  if (isWebOS()) {
-    setAuthInLocalStorage(value);
-  } else {
-    const cookie = useCookie(COOKIE_NAMES.auth, {
-      expires: new Date(
-        new Date().setDate(new Date().getDate() + DAYS_COOKIE_EXPIRES),
-      ),
-    });
-    cookie.value = value;
-  }
-}
-
 export function useAuth() {
   const { fetchData } = useAPI();
   const user = useUser();
@@ -165,4 +105,26 @@ export function useAuth() {
     login,
     logout,
   };
+}
+
+// Get auth token from storage (localStorage for webOS, cookie for web)
+function getAuthToken(): null | string {
+  if (isWebOS()) {
+    return getAuthFromLocalStorage();
+  }
+  return useCookie(COOKIE_NAMES.auth).value ?? null;
+}
+
+// Set auth token in storage
+function setAuthToken(value: null | string) {
+  if (isWebOS()) {
+    setAuthInLocalStorage(value);
+  } else {
+    const cookie = useCookie(COOKIE_NAMES.auth, {
+      expires: new Date(
+        new Date().setDate(new Date().getDate() + DAYS_COOKIE_EXPIRES),
+      ),
+    });
+    cookie.value = value;
+  }
 }

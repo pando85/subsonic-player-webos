@@ -27,9 +27,9 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   console.log('[webOS Input] Plugin loaded, isWebOS:', isWebOS);
 
-  // Add webos-tv class to body for TV-specific CSS styles
-  document.body.classList.add('webos-tv');
-  console.log('[webOS Input] Added webos-tv class to body');
+  // Add webosTV class to body for TV-specific CSS styles
+  document.body.classList.add('webosTV');
+  console.log('[webOS Input] Added webosTV class to body');
 
   // Force tablet responsive design by setting viewport to tablet width
   // This triggers CSS media queries like @media (width >= 769px) for --tablet-up
@@ -143,7 +143,7 @@ export default defineNuxtPlugin((nuxtApp) => {
    * Navigate to the nearest element in a direction
    */
   function navigateSpatial(
-    direction: 'up' | 'down' | 'left' | 'right',
+    direction: 'down' | 'left' | 'right' | 'up',
   ): boolean {
     const allElements = getFocusableElements();
     if (allElements.length === 0) return false;
@@ -177,11 +177,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       let secondaryDistance = 0;
 
       switch (direction) {
-        case 'up':
-          isInDirection = dy < -5;
-          primaryDistance = Math.abs(dy);
-          secondaryDistance = Math.abs(dx);
-          break;
         case 'down':
           isInDirection = dy > 5;
           primaryDistance = Math.abs(dy);
@@ -196,6 +191,11 @@ export default defineNuxtPlugin((nuxtApp) => {
           isInDirection = dx > 5;
           primaryDistance = Math.abs(dx);
           secondaryDistance = Math.abs(dy);
+          break;
+        case 'up':
+          isInDirection = dy < -5;
+          primaryDistance = Math.abs(dy);
+          secondaryDistance = Math.abs(dx);
           break;
       }
 
@@ -295,8 +295,14 @@ export default defineNuxtPlugin((nuxtApp) => {
     console.log('[webOS Input] Back button pressed');
 
     // Try to use webOS platform back if available
-    if ('webOS' in window && (window as any).webOS?.platformBack) {
-      (window as any).webOS.platformBack();
+    if (
+      'webOS' in window &&
+      (window as unknown as { webOS?: { platformBack?: () => void } }).webOS
+        ?.platformBack
+    ) {
+      (
+        window as unknown as { webOS: { platformBack: () => void } }
+      ).webOS.platformBack();
       return;
     }
 
@@ -374,6 +380,25 @@ export default defineNuxtPlugin((nuxtApp) => {
     console.log('[webOS Input] Key pressed:', { key, keyCode });
 
     switch (keyCode) {
+      case 10009: // Samsung/Tizen Back button
+      case 461: // webOS Back button
+        evt.preventDefault();
+        handleBack();
+        break;
+      case 13: // Enter/OK
+        // Don't prevent default for form inputs
+        if (
+          !(document.activeElement instanceof HTMLInputElement) ||
+          document.activeElement.type === 'checkbox'
+        ) {
+          evt.preventDefault();
+        }
+        handleOK();
+        break;
+      case 27: // Escape
+        evt.preventDefault();
+        handleBack();
+        break;
       case 37: // Left Arrow
         evt.preventDefault();
         handleArrowLeft();
@@ -390,21 +415,6 @@ export default defineNuxtPlugin((nuxtApp) => {
         evt.preventDefault();
         handleArrowDown();
         break;
-      case 13: // Enter/OK
-        // Don't prevent default for form inputs
-        if (
-          !(document.activeElement instanceof HTMLInputElement) ||
-          document.activeElement.type === 'checkbox'
-        ) {
-          evt.preventDefault();
-        }
-        handleOK();
-        break;
-      case 461: // webOS Back button
-      case 10009: // Samsung/Tizen Back button
-        evt.preventDefault();
-        handleBack();
-        break;
       case 8: // Backspace (as back in some contexts)
         // Only handle as back if not in an input field
         if (
@@ -414,10 +424,6 @@ export default defineNuxtPlugin((nuxtApp) => {
           evt.preventDefault();
           handleBack();
         }
-        break;
-      case 27: // Escape
-        evt.preventDefault();
-        handleBack();
         break;
     }
   }

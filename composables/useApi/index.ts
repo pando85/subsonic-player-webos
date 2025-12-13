@@ -1,37 +1,5 @@
 import type { UseFetchOptions } from 'nuxt/app';
 
-// Storage key constant (hardcoded to avoid import issues on webOS)
-const AUTH_STORAGE_KEY = 'subsonic_auth_params';
-
-// Helper to check if we're on webOS (file:// protocol)
-function isWebOS() {
-  if (!import.meta.client) return false;
-  try {
-    return window.location.protocol === 'file:';
-  } catch {
-    return false;
-  }
-}
-
-// Get auth token from localStorage (for webOS)
-function getAuthFromLocalStorage(): string | null {
-  if (!import.meta.client) return null;
-  try {
-    return window.localStorage.getItem(AUTH_STORAGE_KEY);
-  } catch (e) {
-    console.error('[useApi] Error reading from localStorage:', e);
-    return null;
-  }
-}
-
-// Get auth token from storage (localStorage for webOS, cookie for web)
-function getAuthToken(): string | null {
-  if (isWebOS()) {
-    return getAuthFromLocalStorage();
-  }
-  return useCookie(COOKIE_NAMES.auth).value ?? null;
-}
-
 export function useAPI() {
   const config = useRuntimeConfig();
   const { IMAGE_SIZE } = config.public;
@@ -139,4 +107,12 @@ export function useAPI() {
     getImageUrl,
     getStreamUrl,
   };
+}
+
+// Get auth token from storage (localStorage for webOS, cookie for web)
+function getAuthToken(): null | string {
+  if (isWebOS()) {
+    return getAuthFromLocalStorage();
+  }
+  return useCookie(COOKIE_NAMES.auth).value ?? null;
 }

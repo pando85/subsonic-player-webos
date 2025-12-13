@@ -2,8 +2,8 @@
  * webOS TV Optimizations
  *
  * Simple styles for TV navigation.
- * Uses the .webos-tv body class added dynamically when running on webOS.
- * 
+ * Uses the .webosTV body class added dynamically when running on webOS.
+ *
  * Note: Tablet layout is triggered by setting viewport width to 1024px
  * in the webos-input plugin. Hover effects are disabled since TV has no mouse.
  */
@@ -12,14 +12,14 @@
    Hide cursor on TV
    ============================================ */
 
-body.webos-tv,
-body.webos-tv * {
+body.webosTV,
+body.webosTV * {
   cursor: none !important;
 }
 
-body.webos-tv input,
-body.webos-tv textarea,
-body.webos-tv select {
+body.webosTV input,
+body.webosTV textarea,
+body.webosTV select {
   cursor: text !important;
 }
 
@@ -28,15 +28,15 @@ body.webos-tv select {
    Uses theme color - works with light/dark themes
    ============================================ */
 
-body.webos-tv :focus,
-body.webos-tv :focus-visible {
+body.webosTV :focus,
+body.webosTV :focus-visible {
   outline: 3px solid var(--theme-color, #6313bc) !important;
   outline-offset: 2px !important;
 }
 
 /* Enhanced focus for album/artist/playlist image links */
-body.webos-tv .layoutImage a:focus,
-body.webos-tv .layoutImage a:focus-visible {
+body.webosTV .layoutImage a:focus,
+body.webosTV .layoutImage a:focus-visible {
   display: block;
   outline: 4px solid var(--theme-color, #6313bc) !important;
   outline-offset: 3px !important;
@@ -44,7 +44,7 @@ body.webos-tv .layoutImage a:focus-visible {
 }
 
 /* Ensure album image links are block-level for proper focus and dimensions */
-body.webos-tv .layoutImage a {
+body.webosTV .layoutImage a {
   display: block;
 }
 
@@ -54,7 +54,7 @@ body.webos-tv .layoutImage a {
    ============================================ */
 
 /* Hide hover-only action buttons (like play/favourite on albums) */
-body.webos-tv [class*='actions'] {
+body.webosTV [class*='actions'] {
   display: none !important;
 }
 
@@ -64,14 +64,14 @@ body.webos-tv [class*='actions'] {
    ============================================ */
 
 /* Make title/artist links inside layout items not interactive */
-body.webos-tv .layoutContent a,
-body.webos-tv .layoutContent button {
+body.webosTV .layoutContent a,
+body.webosTV .layoutContent button {
   pointer-events: none;
 }
 
 /* Ensure these links can't receive focus */
-body.webos-tv .layoutContent a:focus,
-body.webos-tv .layoutContent button:focus {
+body.webosTV .layoutContent a:focus,
+body.webosTV .layoutContent button:focus {
   outline: none !important;
 }
 
@@ -79,6 +79,6 @@ body.webos-tv .layoutContent button:focus {
    Smooth scrolling
    ============================================ */
 
-body.webos-tv {
+body.webosTV {
   scroll-behavior: smooth;
 }
