@@ -31,6 +31,8 @@ body.webosTV select {
 /* Override sidebar width for TV - make it narrower like mobile bottom bar */
 body.webosTV {
   --sidebar-width: 100px !important;
+
+  scroll-behavior: smooth;
 }
 
 /* Hide desktop sidebar components that are too complex for TV */
@@ -48,14 +50,14 @@ body.webosTV nav ul[class*='mobileNavigation'] {
   /* Change from bottom horizontal to left vertical */
   position: fixed;
   inset: 0 auto 0 0 !important;
+  z-index: 9 !important;
   flex-direction: column !important;
+  gap: var(--space-16) !important;
   width: 100px !important;
   height: 100vh !important;
   padding: var(--space-24) var(--space-8) !important;
   border-top: none !important;
   border-right: 1px solid var(--border-color) !important;
-  gap: var(--space-16) !important;
-  z-index: 9 !important;
 }
 
 /* Adjust mobile navigation items for vertical layout */
@@ -67,13 +69,13 @@ body.webosTV nav ul[class*='mobileNavigation'] li {
 /* Stack icon and text vertically */
 body.webosTV nav ul[class*='mobileNavigation'] a {
   flex-direction: column !important;
+  gap: var(--space-4) !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: var(--space-4) !important;
   padding: var(--space-12) var(--space-4) !important;
-  text-align: center !important;
   font-size: 0.7rem !important;
   line-height: 1.2 !important;
+  text-align: center !important;
 }
 
 /* Make icons larger for TV */
@@ -106,7 +108,7 @@ body.webosTV header a[title='Home'] {
 }
 
 /* Hide layout switcher button on TV */
-body.webosTV #view-layout-button,
+body.webosTV button[id='view-layout-button'],
 body.webosTV button[id*='viewLayout'] {
   display: none !important;
 }
@@ -117,16 +119,17 @@ body.webosTV form {
 }
 
 /* Target the search input wrapper (added via JS) */
+/* stylelint-disable-next-line selector-class-pattern */
 body.webosTV .webos-search-wrapper {
   width: 0 !important;
   min-width: 0 !important;
+  overflow: hidden !important;
   opacity: 0 !important;
   transition: all 0.3s ease !important;
-  overflow: hidden !important;
 }
 
 /* Also hide the input itself */
-body.webosTV #search-input {
+body.webosTV input[id='search-input'] {
   width: 0 !important;
   min-width: 0 !important;
   padding: 0 !important;
@@ -136,16 +139,17 @@ body.webosTV #search-input {
 }
 
 /* When search is expanded (via JS class) - show wrapper */
+/* stylelint-disable-next-line selector-class-pattern */
 body.webosTV form.searchExpanded .webos-search-wrapper {
   width: 300px !important;
   min-width: 300px !important;
-  opacity: 1 !important;
   margin-right: var(--space-8) !important;
   overflow: visible !important;
+  opacity: 1 !important;
 }
 
 /* When search is expanded - show and style input */
-body.webosTV form.searchExpanded #search-input {
+body.webosTV form.searchExpanded input[id='search-input'] {
   width: 100% !important;
   min-width: 100% !important;
   padding: calc(var(--space-12) - 2px) var(--space-12) !important;
@@ -262,9 +266,40 @@ body.webosTV .trackRow button:focus-visible {
 }
 
 /* ============================================
-   Smooth scrolling
+   Enhanced Page Navigation Focus
+   Add background highlight to focused page nav buttons
    ============================================ */
 
-body.webosTV {
-  scroll-behavior: smooth;
+/* SUPER VISIBLE TEST - Enhanced focus for page navigation buttons (Discover, Podcasts, Radio) */
+body.webosTV .pageLink:focus,
+body.webosTV .pageLink:focus-visible {
+  font-weight: var(--font-weight-bold) !important;
+  color: black !important;
+  outline: 0 !important;
+
+  /* Very obvious background for testing */
+  background-color: yellow !important;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+/* Enhanced styling for active page */
+body.webosTV .pageCurrentLink {
+  font-weight: var(--font-weight-bold) !important;
+
+  /* Fallback for browsers without color-mix support */
+  background-color: rgb(99 19 188 / 40%) !important;
+
+  /* Modern browsers with color-mix */
+  background-color: color-mix(
+    in oklab,
+    var(--theme-color, #6313bc) 40%,
+    transparent
+  ) !important;
+}
+
+/* Make active page indicator more prominent */
+body.webosTV .pageCurrentLink::before {
+  height: 4px !important;
+  background-color: var(--theme-color, #6313bc) !important;
 }

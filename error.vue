@@ -1,6 +1,12 @@
 <script setup lang="ts">
-const props = defineProps({
-  error: Object,
+interface Props {
+  error?: {
+    message?: string;
+  };
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  error: undefined,
 });
 
 // On WebOS, if we get a "Page not found" error with a file system path,

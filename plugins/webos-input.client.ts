@@ -60,10 +60,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     searchWrapper.classList.add('webos-search-wrapper');
 
     console.log('[webOS Search] Setup complete', {
+      searchButton,
       searchForm,
       searchInput,
       searchWrapper,
-      searchButton,
     });
 
     // Handle search button click with debounce
@@ -234,9 +234,22 @@ export default defineNuxtPlugin((nuxtApp) => {
     ].join(',');
 
     const elements = document.querySelectorAll(selectors);
-    return Array.from(elements).filter(
+    const filtered = Array.from(elements).filter(
       (el) => isVisible(el) && !shouldSkipElement(el),
     ) as HTMLElement[];
+
+    // Log page navigation elements specifically
+    const pageLinks = filtered.filter((el) =>
+      el.classList.contains('pageLink'),
+    );
+    if (pageLinks.length > 0) {
+      console.log(
+        '[webOS Navigation] Page navigation links found:',
+        pageLinks.length,
+      );
+    }
+
+    return filtered;
   }
 
   /**
@@ -344,6 +357,12 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     if (bestElement) {
+      console.log('[webOS Navigation] Focusing element:', {
+        classes: bestElement.className,
+        id: bestElement.id,
+        tag: bestElement.tagName,
+        text: bestElement.textContent?.substring(0, 50),
+      });
       bestElement.focus();
       bestElement.scrollIntoView({
         behavior: 'smooth',
@@ -530,7 +549,6 @@ export default defineNuxtPlugin((nuxtApp) => {
    */
   function onKeyDown(evt: KeyboardEvent): void {
     const keyCode = evt.keyCode;
-    const key = evt.key;
 
     // Log for debugging
 
