@@ -19,7 +19,7 @@
 
 /* Enhanced focus style - highly visible */
 :focus-visible {
-  outline: 3px solid var(--primary-color, #00aaff) !important;
+  outline: 3px solid var(--theme-color-light) !important;
   outline-offset: 3px !important;
   box-shadow: 0 0 0 5px rgba(0, 170, 255, 0.25) !important;
 }
@@ -28,7 +28,7 @@
 button:focus-visible,
 a:focus-visible,
 [role='button']:focus-visible {
-  outline: 3px solid var(--primary-color, #00aaff) !important;
+  outline: 3px solid var(--theme-color-light)  !important;
   outline-offset: 3px !important;
   box-shadow: 0 0 0 5px rgba(0, 170, 255, 0.25) !important;
   transform: scale(1.02);
@@ -41,7 +41,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid var(--primary-color, #00aaff) !important;
+  outline: 3px solid var(--theme-color-light)  !important;
   outline-offset: 2px !important;
   box-shadow: 0 0 0 4px rgba(0, 170, 255, 0.2) !important;
 }
@@ -71,7 +71,7 @@ body.webos-tv select {
 /* Stronger focus states for TV */
 body.webos-tv :focus,
 body.webos-tv :focus-visible {
-  outline: 4px solid #00aaff !important;
+  outline: 4px solid var(--theme-color-light) !important;
   outline-offset: 4px !important;
   box-shadow: 0 0 0 8px rgba(0, 170, 255, 0.35) !important;
 }
@@ -192,7 +192,7 @@ body.webos-tv [aria-current='page']::before {
   transform: translateY(-50%);
   width: 4px;
   height: 80%;
-  background: var(--primary-color, #00aaff);
+  background: var(--theme-color-light) ;
   border-radius: 2px;
 }
 
@@ -218,7 +218,7 @@ body.webos-tv textarea {
   top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  background: #00aaff;
+  background: var(--theme-color-light);
   color: white;
   padding: 12px 24px;
   text-decoration: none;
