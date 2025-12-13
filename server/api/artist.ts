@@ -16,9 +16,7 @@ export default defineEventHandler(async (event) => {
 
       const { baseParams, baseURL } = getBaseOptions(authCookie);
 
-      const response = await $fetch<{
-        'subsonic-response': SubsonicResponse;
-      }>(url, {
+      const response: any = await $fetch(url, {
         baseURL,
         params: {
           ...baseParams,

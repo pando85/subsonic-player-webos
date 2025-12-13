@@ -3,7 +3,7 @@ export default defineNuxtPlugin(() => {
     headers: {
       Accept: 'application/json',
     },
-    onResponse({ response }) {
+    onResponse({ response }: { response: any }) {
       if (response._data instanceof Blob) {
         return response._data;
       }
