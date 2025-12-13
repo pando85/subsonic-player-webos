@@ -20,18 +20,15 @@ Built with [Nuxt 3][nuxt], a modern [Vue 3][vue] framework, this open-source app
 ## ✨ Features
 
 1. Fully Responsive UI (Further design improvements are ongoing.)
-
    - Optimized for desktop and mobile devices.
    - Adaptive design.
 
 2. Comprehensive Library Browsing
-
    - Browse by album, artist, genre, and folder/files.
    - Explore podcasts and favourites.
    - Access internet radio stations.
 
 3. Advanced Functionality
-
    - Bookmarking podcast episode to keep track of the listening position across multiple sessions.
    - MediaSession Integration.
    - Advanced Search capabilities.
@@ -40,7 +37,6 @@ Built with [Nuxt 3][nuxt], a modern [Vue 3][vue] framework, this open-source app
    - Easily drag and drop your favorite tracks, albums, and podcast episodes right into the queue or your playlist in the sidebar (available only on desktop).
 
 4. Progressive Web App (PWA) Feature
-
    - Seamlessly download the app icon to the home screen, providing the convenience of launching the app just like a traditional native application.
    - Benefit from a web-based app that reduces storage space on devices compared to traditional downloadable applications, while still providing robust functionality.
 
@@ -67,6 +63,8 @@ Click on the images to see video of the app in action.
 - [Docker][docker] (recommended).
 - [Node.js][nodejs] 20+.
 - [Yarn][yarn].
+
+> **📺 webOS TV Support**: This app can be deployed to LG webOS TVs! See [WEBOS_GUIDE.md](WEBOS_GUIDE.md) for instructions.
 
 ### Method 1: Docker Deployment
 

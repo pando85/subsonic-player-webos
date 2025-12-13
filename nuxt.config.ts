@@ -32,14 +32,25 @@ const ENVIRONMENT_VARIABLES = {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  app: {
+    // Use relative base path for webOS file:// protocol compatibility
+    baseURL: './',
+    buildAssetsDir: '_nuxt/',
+  },
   builder: 'vite',
   compatibilityDate: '2024-04-03',
+  // webOS requires static SPA build (no SSR)
+  ssr: false,
   css: ['@/assets/css/main.css'],
   devtools: {
     enabled: true,
   },
   experimental: {
     resetAsyncDataToUndefined: false,
+    // Disable payload extraction - fetch() doesn't work with file:// protocol on webOS
+    payloadExtraction: false,
+    // Disable app manifest - it uses fetch() which fails on file:// protocol
+    appManifest: false,
   },
   imports: {
     dirs: IMPORT_DIRECTORIES,
@@ -51,8 +62,19 @@ export default defineNuxtConfig({
     'nuxt-swiper',
   ],
   nitro: {
+    preset: 'static',
     imports: {
       dirs: IMPORT_DIRECTORIES,
+    },
+    // Use relative paths for webOS compatibility
+    output: {
+      publicDir: '.output/public',
+    },
+  },
+  vite: {
+    build: {
+      // Generate relative paths for assets
+      assetsDir: '_nuxt',
     },
   },
   postcss: {
@@ -76,12 +98,16 @@ export default defineNuxtConfig({
     },
   },
   pwa: {
+    // Disable PWA features for webOS (service workers don't work with file:// protocol)
+    // Set to true to completely disable for webOS builds, or use environment variable
+    disable: process.env.WEBOS_BUILD === 'true',
     devOptions: {
       enabled: false,
       type: 'module',
     },
     includeAssets: ['*.svg', '*.png'],
-    injectRegister: 'inline',
+    // Don't inject service worker registration - it fails on file:// protocol
+    injectRegister: process.env.WEBOS_BUILD === 'true' ? false : 'inline',
     manifest: {
       background_color: '#6316bc',
       categories: ['music', 'podcast', 'radio stations'],
@@ -95,9 +121,9 @@ export default defineNuxtConfig({
       orientation: 'any',
       prefer_related_applications: false,
       related_applications: [],
-      scope: '/',
+      scope: './',
       short_name: ENVIRONMENT_VARIABLES.MAIN_APP_TITLE,
-      start_url: '/',
+      start_url: './',
       theme_color: '#6313bc',
     },
     pwaAssets: {
@@ -120,11 +146,11 @@ export default defineNuxtConfig({
       },
     },
     registerWebManifestInRouteRules: true,
-    scope: '/',
+    scope: './',
     selfDestroying: true,
     workbox: {
       globPatterns: ['**/*.{js,css,html,vue,png,svg,ico}'],
-      navigateFallback: '/',
+      navigateFallback: './',
     },
   },
   runtimeConfig: {

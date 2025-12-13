@@ -1,0 +1,365 @@
+/**
+ * webOS TV Optimizations
+ * 
+ * This stylesheet provides TV-optimized styles including:
+ * - High-visibility focus states
+ * - Larger touch targets
+ * - Improved readability on 10-foot displays
+ */
+
+/* ============================================
+   Focus States - Critical for TV Navigation
+   ============================================ */
+
+/* Global focus style - highly visible for TV */
+:focus {
+  outline: 3px solid #00aaff !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 6px rgba(0, 170, 255, 0.3) !important;
+}
+
+/* Focus for buttons */
+button:focus,
+a:focus {
+  outline: 3px solid #00aaff !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 6px rgba(0, 170, 255, 0.3) !important;
+  transform: scale(1.05);
+  transition: transform 0.2s ease-out;
+}
+
+/* Focus for interactive elements */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid #00aaff !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(0, 170, 255, 0.25) !important;
+}
+
+/* Remove default focus styles that might conflict */
+*:focus {
+  outline-color: #00aaff;
+}
+
+/* ============================================
+   Pointer & Cursor Adjustments
+   ============================================ */
+
+/* Hide mouse cursor on TV */
+* {
+  cursor: none !important;
+}
+
+/* Re-enable for inputs where cursor is helpful */
+input,
+textarea,
+select {
+  cursor: auto !important;
+}
+
+/* ============================================
+   Touch Targets - Larger for TV Remotes
+   ============================================ */
+
+/* Minimum touch target size for TV */
+button,
+a,
+[role='button'],
+input[type='button'],
+input[type='submit'] {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 24px;
+}
+
+/* Larger padding for list items */
+li > a,
+li > button {
+  padding: 16px 24px;
+}
+
+/* ============================================
+   Typography - 10-foot Display Optimization
+   ============================================ */
+
+/* Scale up base font size for TV viewing distance */
+html {
+  font-size: 18px; /* Up from typical 16px */
+}
+
+/* Increase line height for readability */
+body {
+  line-height: 1.6;
+}
+
+/* Headers should be more prominent */
+h1 {
+  font-size: 3rem;
+}
+
+h2 {
+  font-size: 2.5rem;
+}
+
+h3 {
+  font-size: 2rem;
+}
+
+h4 {
+  font-size: 1.75rem;
+}
+
+/* Increase small text */
+small,
+.small-text {
+  font-size: 0.95rem;
+}
+
+/* ============================================
+   Hover State Removal
+   ============================================ */
+
+/* Disable hover effects on TV (no mouse) */
+@media (hover: none) and (pointer: coarse) {
+  *:hover {
+    /* Reset any hover-specific styles */
+  }
+}
+
+/* ============================================
+   Scroll Behavior
+   ============================================ */
+
+/* Smooth scrolling for DPAD navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure scrollable containers are obvious */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   Safe Area Padding (for TV overscan)
+   ============================================ */
+
+/* Add padding to account for TV overscan */
+body {
+  padding: env(safe-area-inset-top, 20px) env(safe-area-inset-right, 20px)
+    env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 20px);
+}
+
+/* Ensure content doesn't touch edges */
+.container,
+main,
+header,
+footer {
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+
+/* ============================================
+   Animation Performance
+   ============================================ */
+
+/* Reduce animations for better TV performance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Use GPU acceleration for focus transitions */
+button:focus,
+a:focus {
+  will-change: transform;
+}
+
+/* ============================================
+   Image Optimization
+   ============================================ */
+
+/* Ensure images don't overflow on TV */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Add loading indication for images */
+img:not([src]) {
+  background: linear-gradient(90deg, #333 0%, #444 50%, #333 100%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================
+   Grid & Layout Adjustments
+   ============================================ */
+
+/* Reduce grid columns for TV viewing */
+@media (min-width: 1920px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 24px;
+  }
+}
+
+/* ============================================
+   Audio Player Controls
+   ============================================ */
+
+/* Make audio controls more prominent */
+.audio-player,
+[class*='player'] {
+  padding: 24px;
+  min-height: 80px;
+}
+
+.audio-player button,
+[class*='player'] button {
+  min-width: 60px;
+  min-height: 60px;
+  font-size: 1.5rem;
+}
+
+/* ============================================
+   Modal & Overlay Styles
+   ============================================ */
+
+/* Ensure modals are properly sized for TV */
+.modal,
+[role='dialog'] {
+  max-width: 80vw;
+  max-height: 80vh;
+}
+
+/* Darker overlay for better contrast */
+.modal-overlay,
+.overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* ============================================
+   List & Navigation Styles
+   ============================================ */
+
+/* Increase spacing in navigation lists */
+nav ul,
+nav ol {
+  padding: 12px 0;
+}
+
+nav li {
+  margin: 8px 0;
+}
+
+/* Make active/current items more obvious */
+.active,
+[aria-current='page'] {
+  font-weight: bold;
+  border-left: 4px solid #00aaff;
+  padding-left: 16px;
+}
+
+/* ============================================
+   Form Elements
+   ============================================ */
+
+/* Larger form inputs for TV */
+input,
+select,
+textarea {
+  font-size: 1.125rem;
+  padding: 12px 16px;
+  min-height: 48px;
+}
+
+/* More visible focus state for form fields */
+input:focus,
+select:focus,
+textarea:focus {
+  border: 2px solid #00aaff;
+}
+
+/* ============================================
+   Error & Success States
+   ============================================ */
+
+/* High contrast for error messages */
+.error,
+[role='alert'] {
+  background: rgba(255, 59, 48, 0.2);
+  border: 2px solid #ff3b30;
+  padding: 16px;
+  font-size: 1.125rem;
+}
+
+/* Success messages */
+.success {
+  background: rgba(52, 199, 89, 0.2);
+  border: 2px solid #34c759;
+  padding: 16px;
+  font-size: 1.125rem;
+}
+
+/* ============================================
+   Accessibility Improvements
+   ============================================ */
+
+/* Skip to main content link (for keyboard navigation) */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #00aaff;
+  color: white;
+  padding: 12px 24px;
+  text-decoration: none;
+  z-index: 9999;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
