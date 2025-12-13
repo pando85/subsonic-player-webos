@@ -1,7 +1,8 @@
 import type { VueWrapper } from '@vue/test-utils';
 
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
+import { defineComponent } from 'vue';
 
 import GenreList from '@/components/Atoms/GenreList.vue';
 import NoMediaMessage from '@/components/Atoms/NoMediaMessage.vue';
@@ -49,11 +50,9 @@ mockNuxtImport('useDragAndDrop', () => () => ({
 
 const artistDataMock = ref<Artist | null>(null);
 
-mockNuxtImport('useArtist', () => () => ({
-  getArtist: vi.fn().mockReturnValue({
-    data: artistDataMock,
-    status: ref('success'),
-  }),
+mockNuxtImport('useAsyncData', () => () => ({
+  data: artistDataMock,
+  status: ref('success'),
 }));
 
 const { useHeadTitleMock } = useHeadMock();
@@ -62,8 +61,14 @@ const { addTrackToQueueMock, playTracksMock } = useAudioPlayerMock();
 const track = getFormattedTracksMock()[0];
 const artist = getFormattedArtistsMock()[0];
 
-function factory(props = {}) {
-  return mount(ArtistPage, {
+async function factory(props = {}) {
+  const TestComponent = defineComponent({
+    components: { ArtistPage },
+    template:
+      '<Suspense><ArtistPage ref="artistPage" v-bind="$attrs" /></Suspense>',
+  });
+
+  const wrapper = mount(TestComponent, {
     global: {
       stubs: {
         AlbumsList: true,
@@ -76,13 +81,18 @@ function factory(props = {}) {
       ...props,
     },
   });
+
+  await flushPromises();
+
+  // Return the ArtistPage component wrapper instead of the Suspense wrapper
+  return wrapper.findComponent({ ref: 'artistPage' });
 }
 
 describe('[[id]]', () => {
   let wrapper: VueWrapper;
 
-  beforeEach(() => {
-    wrapper = factory();
+  beforeEach(async () => {
+    wrapper = await factory();
   });
 
   afterEach(() => {
@@ -94,8 +104,9 @@ describe('[[id]]', () => {
   });
 
   describe('when getArtist does not return any data', () => {
-    beforeEach(() => {
-      wrapper = factory();
+    beforeEach(async () => {
+      artistDataMock.value = null;
+      wrapper = await factory();
     });
 
     it('sets the useHead function with correct title', () => {
@@ -112,9 +123,9 @@ describe('[[id]]', () => {
   });
 
   describe('when getArtist does returns data', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       artistDataMock.value = getFormattedArtistsMock()[0];
-      wrapper = factory();
+      wrapper = await factory();
     });
 
     it('sets the useHead function with correct title', () => {
@@ -136,12 +147,12 @@ describe('[[id]]', () => {
     });
 
     describe('when artistData.biography is set', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         artistDataMock.value = getFormattedArtistsMock(1, {
           biography: 'biography',
         })[0];
 
-        wrapper = factory();
+        wrapper = await factory();
       });
 
       it('matches the snapshot', () => {
@@ -167,12 +178,12 @@ describe('[[id]]', () => {
     });
 
     describe('when artistData.genres is an empty array', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         artistDataMock.value = getFormattedArtistsMock(1, {
           genres: [],
         })[0];
 
-        wrapper = factory();
+        wrapper = await factory();
       });
 
       it('matches the snapshot', () => {
@@ -197,12 +208,12 @@ describe('[[id]]', () => {
     });
 
     describe('when artistData.totalAlbums is greater than 1', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         artistDataMock.value = getFormattedArtistsMock(1, {
           totalAlbums: 5,
         })[0];
 
-        wrapper = factory();
+        wrapper = await factory();
       });
 
       it('matches the snapshot', () => {
@@ -221,12 +232,12 @@ describe('[[id]]', () => {
     });
 
     describe('when artistData.totalTracks is greater than 1', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         artistDataMock.value = getFormattedArtistsMock(1, {
           totalTracks: 10,
         })[0];
 
-        wrapper = factory();
+        wrapper = await factory();
       });
 
       it('matches the snapshot', () => {
@@ -247,12 +258,12 @@ describe('[[id]]', () => {
     });
 
     describe('when artistData.lastFmUrl is set', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         artistDataMock.value = getFormattedArtistsMock(1, {
           lastFmUrl: 'lastFmUrl',
         })[0];
 
-        wrapper = factory();
+        wrapper = await factory();
       });
 
       it('matches the snapshot', () => {
@@ -275,12 +286,12 @@ describe('[[id]]', () => {
     });
 
     describe('when artistData.musicBrainzUrl is set', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         artistDataMock.value = getFormattedArtistsMock(1, {
           musicBrainzUrl: 'musicBrainzUrl',
         })[0];
 
-        wrapper = factory();
+        wrapper = await factory();
       });
 
       it('matches the snapshot', () => {
@@ -305,12 +316,12 @@ describe('[[id]]', () => {
       });
 
       describe(`when artistData.${key} is not an empty array`, () => {
-        beforeEach(() => {
+        beforeEach(async () => {
           artistDataMock.value = getFormattedArtistsMock(1, {
             [key]: getFormattedTracksMock(5),
           })[0];
 
-          wrapper = factory();
+          wrapper = await factory();
         });
 
         it('matches the snapshot', () => {
@@ -393,12 +404,12 @@ describe('[[id]]', () => {
     });
 
     describe('when artistData.similarArtist is not an empty array', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         artistDataMock.value = getFormattedArtistsMock(1, {
           similarArtist: [artist],
         })[0];
 
-        wrapper = factory();
+        wrapper = await factory();
       });
 
       it('matches the snapshot', () => {
