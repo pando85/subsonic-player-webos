@@ -274,32 +274,14 @@ body.webosTV .trackRow button:focus-visible {
 body.webosTV .pageLink:focus,
 body.webosTV .pageLink:focus-visible {
   font-weight: var(--font-weight-bold) !important;
-  color: black !important;
   outline: 0 !important;
 
   /* Very obvious background for testing */
-  background-color: yellow !important;
-  transform: scale(1.1);
-  transition: all 0.2s ease;
-}
-
-/* Enhanced styling for active page */
-body.webosTV .pageCurrentLink {
-  font-weight: var(--font-weight-bold) !important;
-
-  /* Fallback for browsers without color-mix support */
-  background-color: rgb(99 19 188 / 40%) !important;
-
-  /* Modern browsers with color-mix */
   background-color: color-mix(
     in oklab,
     var(--theme-color, #6313bc) 40%,
     transparent
   ) !important;
-}
-
-/* Make active page indicator more prominent */
-body.webosTV .pageCurrentLink::before {
-  height: 4px !important;
-  background-color: var(--theme-color, #6313bc) !important;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
 }
