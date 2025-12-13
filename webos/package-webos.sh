@@ -46,7 +46,6 @@ echo "🎨 Step 4: Creating webOS icons..."
 if [ -f "webos/favicon.svg" ]; then
   cp webos/favicon.svg webos/icon.png 2>/dev/null || echo "  ⚠️  Icon conversion skipped (install imagemagick for auto-conversion)"
   cp webos/favicon.svg webos/largeIcon.png 2>/dev/null || true
-  cp webos/favicon.svg webos/splashBackground.png 2>/dev/null || true
 fi
 
 # Use existing PWA icons if available

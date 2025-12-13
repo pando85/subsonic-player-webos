@@ -8,7 +8,7 @@
   "title": "Subsonic Player",
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
-  "splashBackground": "splashBackground.png",
+  "splashBackground": "assets/splash.jpg",
   "bgImage": "icon.png",
   "transparency": false,
   "inspectable": true,
