@@ -41,21 +41,57 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   /**
+   * Check if we're on an individual album/artist/playlist detail page
+   * vs a list/discovery view
+   */
+  function isOnDetailPage(): boolean {
+    const path = window.location.pathname;
+    // Individual detail pages (not plural)
+    return (
+      path.startsWith('/album/') ||
+      path.startsWith('/artist/') ||
+      path.startsWith('/playlist/') ||
+      path.startsWith('/podcast/')
+    );
+  }
+
+  /**
    * Check if an element should be skipped for TV navigation
    * We skip links inside layoutContent (album titles, artist names)
    * to allow jumping directly between album images
    */
   function shouldSkipElement(element: Element): boolean {
+    // On detail pages, allow all buttons (Play All, Shuffle, etc.)
+    // On list/discovery pages, skip buttons inside album items
+    const isDetailPage = isOnDetailPage();
+
     // Skip links/buttons inside layoutContent (album title, artist links)
     const layoutContent = element.closest('.layoutContent');
     if (layoutContent) {
       return true;
     }
 
-    // Skip elements inside hidden action buttons
+    // Skip elements inside hidden action buttons (play/favourite on album hover)
+    // These are the buttons that appear on hover in the album grid
     const actions = element.closest('[class*="actions"]');
     if (actions) {
       return true;
+    }
+
+    // On list/discovery pages (albums, artists, etc.), skip all buttons
+    // inside layoutItem to only focus on images
+    if (!isDetailPage) {
+      const layoutItem = element.closest('.layoutItem');
+      if (
+        layoutItem &&
+        (element.tagName === 'BUTTON' || element.tagName === 'A')
+      ) {
+        // Allow the main image link
+        const isImageLink = element.closest('.layoutImage');
+        if (!isImageLink) {
+          return true;
+        }
+      }
     }
 
     return false;
@@ -339,6 +375,35 @@ export default defineNuxtPlugin((nuxtApp) => {
    */
   function navigationInit(): void {
     const allElements = getFocusableElements();
+    const isDetailPage = isOnDetailPage();
+
+    // On detail pages (album, artist, playlist), prioritize Play All button
+    if (isDetailPage) {
+      // Try to find Play All button by ID first
+      const playAllButton = document.getElementById('play-all-button');
+      if (playAllButton && isVisible(playAllButton)) {
+        playAllButton.focus();
+        console.log('[webOS Input] Initial focus on Play All button');
+        return;
+      }
+
+      // Fallback: find any button with "play" in text (case insensitive)
+      const buttons = document.querySelectorAll('button');
+      for (const button of buttons) {
+        if (
+          button.textContent?.toLowerCase().includes('play') &&
+          isVisible(button) &&
+          !shouldSkipElement(button)
+        ) {
+          button.focus();
+          console.log(
+            '[webOS Input] Initial focus on Play button:',
+            button.textContent?.trim(),
+          );
+          return;
+        }
+      }
+    }
 
     // Try to find a good initial element to focus
     // Priority: 1) buttons with specific classes, 2) first input, 3) first focusable
