@@ -258,7 +258,7 @@ body.webosTV .trackRow button:focus-visible {
   outline-offset: 2px !important;
   background-color: color-mix(
     in oklab,
-    var(--theme-color-light, #6313bc) 80%,
+    var(--theme-color-light) 80%,
     var(--black-color)
   ) !important;
   border-radius: 50%;

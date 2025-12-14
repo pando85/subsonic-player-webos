@@ -55,3 +55,4 @@ webos/*
 !webos/appinfo.json
 !webos/*.sh
 !webos/*.md
+!webos/assets
