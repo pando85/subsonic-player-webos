@@ -135,22 +135,12 @@ export default defineNuxtPlugin((nuxtApp) => {
    * to allow jumping directly between album images
    */
   function shouldSkipElement(element: Element): boolean {
-    // On detail pages, allow all buttons (Play All, Shuffle, etc.)
-    // On list/discovery pages, skip buttons inside album items
-    const isDetailPage = isOnDetailPage();
-
     // Skip track seeker input (progress bar) - use skip buttons instead
     if (
       element.tagName === 'INPUT' &&
       element.closest('[class*="trackSeeker"]')
     ) {
       return true;
-    }
-
-    // Allow image links - these are the main navigation targets
-    const isImageLink = element.closest('.layoutImage');
-    if (isImageLink) {
-      return false; // Never skip image links
     }
 
     // Skip links/buttons inside layoutContent (album title, artist links)
@@ -164,18 +154,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     const actions = element.closest('[class*="actions"]');
     if (actions) {
       return true;
-    }
-
-    // On list/discovery pages (albums, artists, etc.), skip all buttons
-    // inside layoutItem to only focus on images
-    if (!isDetailPage) {
-      const layoutItem = element.closest('.layoutItem');
-      if (
-        layoutItem &&
-        (element.tagName === 'BUTTON' || element.tagName === 'A')
-      ) {
-        return true;
-      }
     }
 
     return false;
