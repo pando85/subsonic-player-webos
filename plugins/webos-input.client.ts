@@ -246,18 +246,39 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   /**
-   * Get element's center position
+   * Get element's bounding rect with some useful computed properties
    */
-  function getElementCenter(el: HTMLElement): { x: number; y: number } {
+  function getElementRect(el: HTMLElement): {
+    rect: DOMRect;
+    centerX: number;
+    centerY: number;
+  } {
     const rect = el.getBoundingClientRect();
     return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
+      rect,
+      centerX: rect.left + rect.width / 2,
+      centerY: rect.top + rect.height / 2,
     };
   }
 
   /**
+   * Check if two elements overlap on an axis (with tolerance)
+   */
+  function hasOverlap(
+    aStart: number,
+    aEnd: number,
+    bStart: number,
+    bEnd: number,
+    tolerance: number = 0,
+  ): boolean {
+    return aStart - tolerance < bEnd && aEnd + tolerance > bStart;
+  }
+
+  /**
    * Navigate to the nearest element in a direction
+   * Uses a more predictable algorithm that prioritizes:
+   * 1. Elements that are aligned (overlap on the perpendicular axis)
+   * 2. Distance in the primary direction
    */
   function navigateSpatial(
     direction: 'down' | 'left' | 'right' | 'up',
@@ -277,59 +298,95 @@ export default defineNuxtPlugin((nuxtApp) => {
       return true;
     }
 
-    const currentCenter = getElementCenter(currentElement);
+    const current = getElementRect(currentElement);
+    const isHorizontal = direction === 'left' || direction === 'right';
+
     let bestElement: HTMLElement | null = null;
     let bestScore = Infinity;
+    let bestIsAligned = false;
 
     for (const element of allElements) {
       if (element === currentElement) continue;
 
-      const center = getElementCenter(element);
-      const dx = center.x - currentCenter.x;
-      const dy = center.y - currentCenter.y;
+      const target = getElementRect(element);
 
-      // Check if element is in the correct direction
+      // Calculate distances
+      const dx = target.centerX - current.centerX;
+      const dy = target.centerY - current.centerY;
+
+      // Check if element is in the correct direction (with small threshold)
       let isInDirection = false;
       let primaryDistance = 0;
-      let secondaryDistance = 0;
 
       switch (direction) {
-        case 'down':
-          isInDirection = dy > 5;
-          primaryDistance = Math.abs(dy);
-          secondaryDistance = Math.abs(dx);
-          break;
         case 'left':
-          isInDirection = dx < -5;
-          primaryDistance = Math.abs(dx);
-          secondaryDistance = Math.abs(dy);
+          isInDirection = target.rect.right < current.rect.left + 10;
+          primaryDistance = current.rect.left - target.rect.right;
           break;
         case 'right':
-          isInDirection = dx > 5;
-          primaryDistance = Math.abs(dx);
-          secondaryDistance = Math.abs(dy);
+          isInDirection = target.rect.left > current.rect.right - 10;
+          primaryDistance = target.rect.left - current.rect.right;
           break;
         case 'up':
-          isInDirection = dy < -5;
-          primaryDistance = Math.abs(dy);
-          secondaryDistance = Math.abs(dx);
+          isInDirection = target.rect.bottom < current.rect.top + 10;
+          primaryDistance = current.rect.top - target.rect.bottom;
+          break;
+        case 'down':
+          isInDirection = target.rect.top > current.rect.bottom - 10;
+          primaryDistance = target.rect.top - current.rect.bottom;
           break;
       }
 
-      if (!isInDirection) continue;
+      if (!isInDirection || primaryDistance < 0) continue;
 
-      let score;
-      if (direction === 'left' || direction === 'right') {
-        // Horizontal navigation: prioritize horizontal alignment
-        score = primaryDistance + secondaryDistance * 30;
+      // Check alignment - elements that overlap on perpendicular axis are preferred
+      let isAligned: boolean;
+      let perpendicularDistance: number;
+
+      if (isHorizontal) {
+        // For left/right: check vertical overlap
+        isAligned = hasOverlap(
+          current.rect.top,
+          current.rect.bottom,
+          target.rect.top,
+          target.rect.bottom,
+          5, // 5px tolerance
+        );
+        perpendicularDistance = Math.abs(dy);
       } else {
-        // Vertical navigation: prioritize vertical alignment
-        score = primaryDistance + secondaryDistance * 3;
+        // For up/down: check horizontal overlap
+        isAligned = hasOverlap(
+          current.rect.left,
+          current.rect.right,
+          target.rect.left,
+          target.rect.right,
+          5, // 5px tolerance
+        );
+        perpendicularDistance = Math.abs(dx);
       }
 
-      if (score < bestScore) {
+      // Calculate score
+      // Aligned elements get a huge bonus (lower score)
+      // Primary distance is the main factor, perpendicular is secondary
+      let score: number;
+
+      if (isAligned) {
+        // Aligned: primarily care about distance in the navigation direction
+        score = primaryDistance + perpendicularDistance * 0.1;
+      } else {
+        // Not aligned: heavily penalize perpendicular distance
+        score = primaryDistance + perpendicularDistance * 5;
+      }
+
+      // Prefer aligned elements even if slightly farther away
+      const isBetterChoice =
+        (isAligned && !bestIsAligned) ||
+        (isAligned === bestIsAligned && score < bestScore);
+
+      if (isBetterChoice) {
         bestScore = score;
         bestElement = element;
+        bestIsAligned = isAligned;
       }
     }
 
