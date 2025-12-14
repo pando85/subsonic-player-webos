@@ -292,6 +292,13 @@ body.webosTV article[data-test-id='playlist'] [class*='dropdown'] {
   display: none !important;
 }
 
+
+/* Hide carousel navigation buttons (Previous/Next slide) on TV */
+body.webosTV [class*='carouselSwiper'] button[class*='previous'],
+body.webosTV [class*='carouselSwiper'] button[class*='next'] {
+  display: none !important;
+}
+
 /* ============================================
    Simplified Navigation for Albums/Artists/etc
    Only album images are focusable, not titles or artist links
