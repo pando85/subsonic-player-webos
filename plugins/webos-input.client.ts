@@ -156,6 +156,14 @@ export default defineNuxtPlugin((nuxtApp) => {
     // On list/discovery pages, skip buttons inside album items
     const isDetailPage = isOnDetailPage();
 
+    // Skip track seeker input (progress bar) - use skip buttons instead
+    if (
+      element.tagName === 'INPUT' &&
+      element.closest('[class*="trackSeeker"]')
+    ) {
+      return true;
+    }
+
     // Skip links/buttons inside layoutContent (album title, artist links)
     const layoutContent = element.closest('.layoutContent');
     if (layoutContent) {

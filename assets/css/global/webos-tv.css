@@ -83,15 +83,20 @@ body.webosTV a[href*='bookmarks'] {
   display: none !important;
 }
 
-/* Make track seeker non-focusable - use skip buttons instead */
-body.webosTV .desktopOnly[class*='trackSeeker'] input {
+/* Make track seeker completely non-selectable/non-focusable - use skip buttons instead */
+body.webosTV .desktopOnly[class*='trackSeeker'],
+body.webosTV .desktopOnly[class*='trackSeeker'] * {
   pointer-events: none !important;
   cursor: none !important;
+  user-select: none !important;
 }
 
 body.webosTV .desktopOnly[class*='trackSeeker'] input:focus,
-body.webosTV .desktopOnly[class*='trackSeeker'] input:focus-visible {
+body.webosTV .desktopOnly[class*='trackSeeker'] input:focus-visible,
+body.webosTV .desktopOnly[class*='trackSeeker'] *:focus,
+body.webosTV .desktopOnly[class*='trackSeeker'] *:focus-visible {
   outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Show mobile navigation but reposition it to the left side */
