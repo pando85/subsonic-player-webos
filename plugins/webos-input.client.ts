@@ -17,8 +17,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     return;
   }
 
-  // Check if we're on webOS (file:// protocol)
-  const isWebOS = window.location.protocol === 'file:';
+  // Check if we're on webOS (file:// protocol) or testing mode (?webos=true)
+  const isWebOS =
+    window.location.protocol === 'file:' ||
+    window.location.search.includes('webos=true');
 
   // Only activate for webOS TV environment
   if (!isWebOS) {

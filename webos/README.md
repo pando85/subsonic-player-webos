@@ -112,7 +112,7 @@ This allows TV-specific UX without breaking desktop/mobile compatibility.
 # Standard web development (no TV needed)
 yarn dev
 
-# Test in browser at http://localhost:3000
+# Test in browser at http://localhost:3000/?webos=true
 # Simulate TV with browser dev tools:
 # - Set viewport to 1920x1080
 # - Use keyboard for navigation (arrow keys = DPAD)
