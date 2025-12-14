@@ -40,6 +40,60 @@ body.webosTV .desktopOnly {
   display: none !important;
 }
 
+/* ============================================
+   Music Player Layout for TV
+   Show desktop controls in proper positions
+   ============================================ */
+
+/* EXCEPT: Show player controls on TV (they're marked desktopOnly but we need them) */
+body.webosTV .desktopOnly[class*='PlayerControls'],
+body.webosTV .desktopOnly[class*='playerControls'] {
+  display: flex !important;
+}
+
+/* Show player options (favourite, volume, etc.) on TV */
+body.webosTV .desktopOnly[class*='playerOptions'] {
+  display: flex !important;
+}
+
+/* Show track seeker (progress bar) on TV */
+body.webosTV .desktopOnly[class*='trackSeeker'] {
+  display: block !important;
+}
+
+/* Hide the mobile play/pause button on TV (we use the desktop controls) */
+body.webosTV .mobileOnly[class*='playPauseButton'] {
+  display: none !important;
+}
+
+/* Hide the mobile queue button overlay on TV */
+body.webosTV .mobileOnly[class*='queueControl'] {
+  display: none !important;
+}
+
+/* Hide bookmark-related elements on TV (not needed) */
+body.webosTV [class*='bookmark'],
+body.webosTV [class*='Bookmark'] {
+  display: none !important;
+}
+
+/* Hide bookmarks navigation link on TV */
+body.webosTV a[title='Bookmarks'],
+body.webosTV a[href*='bookmarks'] {
+  display: none !important;
+}
+
+/* Make track seeker non-focusable - use skip buttons instead */
+body.webosTV .desktopOnly[class*='trackSeeker'] input {
+  pointer-events: none !important;
+  cursor: none !important;
+}
+
+body.webosTV .desktopOnly[class*='trackSeeker'] input:focus,
+body.webosTV .desktopOnly[class*='trackSeeker'] input:focus-visible {
+  outline: none !important;
+}
+
 /* Show mobile navigation but reposition it to the left side */
 body.webosTV .mobileOnly {
   display: flex !important;
@@ -213,8 +267,7 @@ body.webosTV article[data-test-id='playlist'] a:focus,
 body.webosTV article[data-test-id='playlist'] a:focus-visible {
   outline: 5px solid var(--theme-color) !important;
   outline-offset: 3px !important;
-  box-shadow: 0 0 25px
-    color-mix(in oklab, var(--theme-color) 60%, transparent) !important;
+  box-shadow: 0 0 25px color-mix(in oklab, var(--theme-color) 60%, transparent) !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
 }
