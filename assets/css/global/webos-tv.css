@@ -372,6 +372,18 @@ body.webosTV .trackRow button:focus-visible {
   transform: scale(1.15);
 }
 
+/* Hide the bulletList (album/artist links) in track meta on TV */
+body.webosTV .trackRow .mobileOnly {
+  display: none !important;
+}
+
+/* Make play button in track rows focusable but invisible on TV */
+body.webosTV .trackRow [class*='playPauseWrapper'] {
+  visibility: visible !important;
+  opacity: 0 !important;
+  transform: unset !important;
+}
+
 /* ============================================
    Enhanced Page Navigation Focus
    Add background highlight to focused page nav buttons

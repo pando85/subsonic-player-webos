@@ -249,15 +249,15 @@ export default defineNuxtPlugin((nuxtApp) => {
    * Get element's bounding rect with some useful computed properties
    */
   function getElementRect(el: HTMLElement): {
-    rect: DOMRect;
     centerX: number;
     centerY: number;
+    rect: DOMRect;
   } {
     const rect = el.getBoundingClientRect();
     return {
-      rect,
       centerX: rect.left + rect.width / 2,
       centerY: rect.top + rect.height / 2,
+      rect,
     };
   }
 
@@ -319,6 +319,10 @@ export default defineNuxtPlugin((nuxtApp) => {
       let primaryDistance = 0;
 
       switch (direction) {
+        case 'down':
+          isInDirection = target.rect.top > current.rect.bottom - 10;
+          primaryDistance = target.rect.top - current.rect.bottom;
+          break;
         case 'left':
           isInDirection = target.rect.right < current.rect.left + 10;
           primaryDistance = current.rect.left - target.rect.right;
@@ -330,10 +334,6 @@ export default defineNuxtPlugin((nuxtApp) => {
         case 'up':
           isInDirection = target.rect.bottom < current.rect.top + 10;
           primaryDistance = current.rect.top - target.rect.bottom;
-          break;
-        case 'down':
-          isInDirection = target.rect.top > current.rect.bottom - 10;
-          primaryDistance = target.rect.top - current.rect.bottom;
           break;
       }
 
