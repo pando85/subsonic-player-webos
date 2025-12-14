@@ -60,6 +60,7 @@
   "scripts": {
     "build": "nuxt build",
     "build-storybook": "storybook build",
+    "build:webos": "./webos/package-webos.sh",
     "check-types": "vue-tsc --noEmit",
     "dev": "yarn postinstall && nuxt dev --open",
     "generate": "nuxt generate",

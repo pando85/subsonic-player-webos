@@ -1,12 +1,11 @@
-# 🎵 Subsonic Player: A Modern Subsonic Client
+# 🎵 Subsonic Player WebOS
 
 ![GitHub Actions Workflow Status][action-workflow]
-[![Docker Pulls][docker-pulls]][docker-hub]
 [![GitHub License][github-license]][license]
 
 ## 📝 Overview
 
-Subsonic player is a responsive, modern web-based client designed for [Subsonic music servers][subsonic].
+Subsonic Player WebOS is a minimal fork of [Subsonic player][subsonic-player], designed to stay closely compatible with upstream while adding essential enhancements for LG webOS TVs.
 
 Built with [Nuxt 3][nuxt], a modern [Vue 3][vue] framework, this open-source application provides a seamless and enjoyable music listening experience across all devices.
 
@@ -20,18 +19,15 @@ Built with [Nuxt 3][nuxt], a modern [Vue 3][vue] framework, this open-source app
 ## ✨ Features
 
 1. Fully Responsive UI (Further design improvements are ongoing.)
-
    - Optimized for desktop and mobile devices.
    - Adaptive design.
 
 2. Comprehensive Library Browsing
-
    - Browse by album, artist, genre, and folder/files.
    - Explore podcasts and favourites.
    - Access internet radio stations.
 
 3. Advanced Functionality
-
    - Bookmarking podcast episode to keep track of the listening position across multiple sessions.
    - MediaSession Integration.
    - Advanced Search capabilities.
@@ -40,7 +36,6 @@ Built with [Nuxt 3][nuxt], a modern [Vue 3][vue] framework, this open-source app
    - Easily drag and drop your favorite tracks, albums, and podcast episodes right into the queue or your playlist in the sidebar (available only on desktop).
 
 4. Progressive Web App (PWA) Feature
-
    - Seamlessly download the app icon to the home screen, providing the convenience of launching the app just like a traditional native application.
    - Benefit from a web-based app that reduces storage space on devices compared to traditional downloadable applications, while still providing robust functionality.
 
@@ -168,12 +163,12 @@ This project is licensed under the AGPLv3 license. Full license details availabl
 
 <!-- Links -->
 
+[subsonic-player]: https://github.com/VD39/subsonic-player
 [nuxt]: https://nuxt.com/
 [vue]: https://vuejs.org/
 [gonic]: https://github.com/sentriz/gonic/
 [airsonic]: https://github.com/airsonic-advanced/airsonic-advanced/
 [navidrome]: https://github.com/navidrome/navidrome/
-[subsonic]: https://github.com/topics/subsonic/
 [docker]: https://www.docker.com/
 [nodejs]: https://nodejs.org/
 [yarn]: https://yarnpkg.com/

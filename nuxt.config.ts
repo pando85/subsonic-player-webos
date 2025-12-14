@@ -32,6 +32,15 @@ const ENVIRONMENT_VARIABLES = {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  app: {
+    // Use relative base path for webOS file:// protocol compatibility
+    baseURL: './',
+    buildAssetsDir: '_nuxt/',
+    head: {
+      // For webOS builds, we'll strip crossorigin attributes via post-processing
+      // since file:// protocol doesn't support CORS
+    },
+  },
   builder: 'vite',
   compatibilityDate: '2024-04-03',
   css: ['@/assets/css/main.css'],
@@ -39,7 +48,15 @@ export default defineNuxtConfig({
     enabled: true,
   },
   experimental: {
+    // Disable app manifest - it uses fetch() which fails on file:// protocol
+    appManifest: false,
+    // Disable payload extraction - fetch() doesn't work with file:// protocol on webOS
+    payloadExtraction: false,
     resetAsyncDataToUndefined: false,
+  },
+  features: {
+    // Disable inline styles to reduce complexity for webOS
+    inlineStyles: process.env.WEBOS_BUILD !== 'true',
   },
   imports: {
     dirs: IMPORT_DIRECTORIES,
@@ -54,6 +71,11 @@ export default defineNuxtConfig({
     imports: {
       dirs: IMPORT_DIRECTORIES,
     },
+    // Use relative paths for webOS compatibility
+    output: {
+      publicDir: '.output/public',
+    },
+    preset: 'static',
   },
   postcss: {
     plugins: {
@@ -80,8 +102,12 @@ export default defineNuxtConfig({
       enabled: false,
       type: 'module',
     },
+    // Disable PWA features for webOS (service workers don't work with file:// protocol)
+    // Set to true to completely disable for webOS builds, or use environment variable
+    disable: process.env.WEBOS_BUILD === 'true',
     includeAssets: ['*.svg', '*.png'],
-    injectRegister: 'inline',
+    // Don't inject service worker registration - it fails on file:// protocol
+    injectRegister: process.env.WEBOS_BUILD === 'true' ? false : 'inline',
     manifest: {
       background_color: '#6316bc',
       categories: ['music', 'podcast', 'radio stations'],
@@ -95,9 +121,9 @@ export default defineNuxtConfig({
       orientation: 'any',
       prefer_related_applications: false,
       related_applications: [],
-      scope: '/',
+      scope: './',
       short_name: ENVIRONMENT_VARIABLES.MAIN_APP_TITLE,
-      start_url: '/',
+      start_url: './',
       theme_color: '#6313bc',
     },
     pwaAssets: {
@@ -120,11 +146,11 @@ export default defineNuxtConfig({
       },
     },
     registerWebManifestInRouteRules: true,
-    scope: '/',
+    scope: './',
     selfDestroying: true,
     workbox: {
       globPatterns: ['**/*.{js,css,html,vue,png,svg,ico}'],
-      navigateFallback: '/',
+      navigateFallback: './',
     },
   },
   runtimeConfig: {
@@ -132,8 +158,16 @@ export default defineNuxtConfig({
       ...ENVIRONMENT_VARIABLES,
     },
   },
+  // webOS requires static SPA build (no SSR)
+  ssr: false,
   typescript: {
     strict: true,
     typeCheck: true,
+  },
+  vite: {
+    build: {
+      // Generate relative paths for assets
+      assetsDir: '_nuxt',
+    },
   },
 });

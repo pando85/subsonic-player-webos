@@ -7,8 +7,14 @@ export function useAPI() {
   const { addErrorSnack } = useSnack();
 
   function getUrl(path: string, param: Record<string, number | string>) {
-    const authCookie = useCookie(COOKIE_NAMES.auth);
-    const { baseParams, baseURL } = getBaseOptions(authCookie.value!);
+    const authToken = getAuthToken();
+    const { baseParams, baseURL } = getBaseOptions(authToken || '');
+
+    // If no baseURL is available, return empty string
+    if (!baseURL) {
+      console.warn('[useApi] Cannot generate URL without server URL');
+      return '';
+    }
 
     const url = new URL(`${baseURL}/${path}`);
     url.search = convertToQueryString({
@@ -49,13 +55,19 @@ export function useAPI() {
   ) {
     try {
       const { $api } = useNuxtApp();
-      const authCookie = useCookie(COOKIE_NAMES.auth);
+      const authToken = getAuthToken();
 
-      const { baseParams, baseURL } = getBaseOptions(authCookie.value!);
+      const { baseParams, baseURL } = getBaseOptions(authToken || '');
+
+      // If no baseURL is available and none was provided in options, we can't make the request
+      const effectiveBaseURL = options.baseURL ?? baseURL;
+      if (!effectiveBaseURL) {
+        throw new Error('No server URL configured. Please log in again.');
+      }
 
       const response = await $api(url, {
         ...options,
-        baseURL: options.baseURL ?? baseURL,
+        baseURL: effectiveBaseURL,
         params: {
           ...baseParams,
           ...options.params,
@@ -95,4 +107,12 @@ export function useAPI() {
     getImageUrl,
     getStreamUrl,
   };
+}
+
+// Get auth token from storage (localStorage for webOS, cookie for web)
+function getAuthToken(): null | string {
+  if (isWebOS()) {
+    return getAuthFromLocalStorage();
+  }
+  return useCookie(COOKIE_NAMES.auth).value ?? null;
 }
