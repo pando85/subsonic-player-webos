@@ -271,8 +271,9 @@ body.webosTV .layoutImage a:focus-visible {
   box-shadow: 0 0 0 4px var(--theme-color) !important;
 }
 
-/* Ensure album image links are block-level for proper focus and dimensions */
-body.webosTV .layoutImage {
+/* Ensure album image links and genres are block-level for proper focus and dimensions */
+body.webosTV .layoutImage,
+body.webosTV swiper-slide[data-test-id="random-genre-item"] {
   padding: 4px !important;
 }
 
