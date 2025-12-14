@@ -362,14 +362,7 @@ body.webosTV .trackRow:focus-within {
 body.webosTV .trackRow button:focus,
 body.webosTV .trackRow button:focus-visible {
   outline: none !important;
-  outline-offset: 0 !important;
-  background-color: color-mix(
-    in oklab,
-    var(--theme-color-light) 80%,
-    var(--black-color)
-  ) !important;
-  border-radius: 50%;
-  transform: scale(1.15);
+  background-color: transparent !important;
 }
 
 /* Hide the bulletList (album/artist links) in track meta on TV */
@@ -377,11 +370,27 @@ body.webosTV .trackRow .mobileOnly {
   display: none !important;
 }
 
-/* Make play button in track rows focusable but invisible on TV */
+/* Make play button cover the entire track row for easier focus on TV */
+body.webosTV .trackRow {
+  position: relative;
+}
+
 body.webosTV .trackRow [class*='playPauseWrapper'] {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1;
   visibility: visible !important;
+  width: 100% !important;
+  height: 100% !important;
   opacity: 0 !important;
   transform: unset !important;
+}
+
+/* The button inside should also cover the area */
+body.webosTV .trackRow [class*='playPauseWrapper'] button {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
 }
 
 /* ============================================
