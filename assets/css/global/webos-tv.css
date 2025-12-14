@@ -248,10 +248,17 @@ body.webosTV h3 a svg {
    ============================================ */
 
 body.webosTV :focus,
-body.webosTV :focus-visible {
+body.webosTV :focus-visible,
+body.webosTV nav ul[class*='mobileNavigation'] a:focus,
+body.webosTV nav ul[class*='mobileNavigation'] a:focus-visible {
   outline: none;
   box-shadow: 0 0 0 4px var(--theme-color) !important;
   border-radius: var(--border-radius-small);
+}
+
+body.webosTV a:focus,
+body.webosTV a:focus-visible {
+  box-shadow: none !important;
 }
 
 /* Enhanced focus for album/artist/playlist image links */
