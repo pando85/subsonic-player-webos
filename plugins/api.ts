@@ -13,7 +13,7 @@ export default defineNuxtPlugin(() => {
       }
 
       if (response._data instanceof Blob) {
-        return response._data;
+        return;
       }
 
       const subsonicResponse = (response._data as Record<string, unknown>)[
@@ -28,9 +28,9 @@ export default defineNuxtPlugin(() => {
       }
 
       if (subsonicResponse.status === 'ok') {
-        return (response._data = {
+        response._data = {
           ...subsonicResponse,
-        });
+        };
       }
     },
   });
