@@ -1,6 +1,12 @@
 import type { UseFetchOptions } from '#app';
 
 import { defineEventHandler, getCookie, getQuery } from 'h3';
+import { $fetch } from 'ofetch';
+
+import { getBaseOptions } from '@/composables/useApi/utils';
+import { COOKIE_NAMES } from '@/composables/useAuth/constant';
+import { PREVIEW_TRACK_COUNT } from '@/settings/constants';
+import { formatArtist } from '@/utils/Formatters';
 
 export default defineEventHandler(async (event) => {
   const { id } = getQuery(event);

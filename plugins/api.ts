@@ -6,8 +6,12 @@ export default defineNuxtPlugin(() => {
     onResponse({
       response,
     }: {
-      response: { _data: Blob | Record<string, unknown> };
+      response: { _data?: Blob | Record<string, unknown> };
     }) {
+      if (!response._data) {
+        return;
+      }
+
       if (response._data instanceof Blob) {
         return response._data;
       }
