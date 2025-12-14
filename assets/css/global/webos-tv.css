@@ -276,6 +276,26 @@ body.webosTV .layoutImage {
   padding: 4px !important;
 }
 
+body.webosTV .layoutImage a {
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+body.webosTV .layoutImage figure {
+  display: block !important;
+}
+
+/* Make h2 headings focusable for section navigation on TV */
+body.webosTV h2 {
+  outline: none;
+}
+
+body.webosTV h2:focus,
+body.webosTV h2:focus-visible {
+  border-radius: var(--border-radius-small);
+  box-shadow: 0 0 0 3px var(--theme-color) !important;
+}
+
 /* Enhanced focus for entire playlist card */
 body.webosTV article[data-test-id='playlist'] a:focus,
 body.webosTV article[data-test-id='playlist'] a:focus-visible {

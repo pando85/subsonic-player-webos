@@ -61,23 +61,13 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Add a custom class to the wrapper for targeting with CSS
     searchWrapper.classList.add('webos-search-wrapper');
 
-    console.log('[webOS Search] Setup complete', {
-      searchButton,
-      searchForm,
-      searchInput,
-      searchWrapper,
-    });
-
     // Handle search button click with debounce
     searchButton.addEventListener('click', (evt) => {
       // Prevent double-firing from TV remote
       if (isProcessing) {
         evt.preventDefault();
-        console.log('[webOS Search] Ignoring duplicate click');
         return;
       }
-
-      console.log('[webOS Search] Button clicked, expanded:', searchExpanded);
 
       if (!searchExpanded) {
         // Expand search input
@@ -85,10 +75,6 @@ export default defineNuxtPlugin((nuxtApp) => {
         isProcessing = true;
         searchExpanded = true;
         searchForm.classList.add('searchExpanded');
-        console.log(
-          '[webOS Search] Expanding search, classes:',
-          searchForm.className,
-        );
 
         // Small delay before allowing next action and focusing
         setTimeout(() => {
@@ -98,10 +84,6 @@ export default defineNuxtPlugin((nuxtApp) => {
         }, 100);
       } else {
         // If expanded, let the form submit normally (search)
-        console.log(
-          '[webOS Search] Submitting search with value:',
-          searchInput.value,
-        );
         // Don't prevent default - let form submit
       }
     });
@@ -109,7 +91,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Handle focus loss to collapse search
     searchInput.addEventListener('blur', () => {
       if (searchExpanded) {
-        console.log('[webOS Search] Input lost focus, collapsing');
         searchExpanded = false;
         searchForm.classList.remove('searchExpanded');
       }
@@ -166,6 +147,12 @@ export default defineNuxtPlugin((nuxtApp) => {
       return true;
     }
 
+    // Allow image links - these are the main navigation targets
+    const isImageLink = element.closest('.layoutImage');
+    if (isImageLink) {
+      return false; // Never skip image links
+    }
+
     // Skip links/buttons inside layoutContent (album title, artist links)
     const layoutContent = element.closest('.layoutContent');
     if (layoutContent) {
@@ -187,11 +174,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         layoutItem &&
         (element.tagName === 'BUTTON' || element.tagName === 'A')
       ) {
-        // Allow the main image link
-        const isImageLink = element.closest('.layoutImage');
-        if (!isImageLink) {
-          return true;
-        }
+        return true;
       }
     }
 
@@ -247,17 +230,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     const filtered = Array.from(elements).filter(
       (el) => isVisible(el) && !shouldSkipElement(el),
     ) as HTMLElement[];
-
-    // Log page navigation elements specifically
-    const pageLinks = filtered.filter((el) =>
-      el.classList.contains('pageLink'),
-    );
-    if (pageLinks.length > 0) {
-      console.log(
-        '[webOS Navigation] Page navigation links found:',
-        pageLinks.length,
-      );
-    }
 
     return filtered;
   }
@@ -367,12 +339,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     if (bestElement) {
-      console.log('[webOS Navigation] Focusing element:', {
-        classes: bestElement.className,
-        id: bestElement.id,
-        tag: bestElement.tagName,
-        text: bestElement.textContent?.substring(0, 50),
-      });
       bestElement.focus();
       bestElement.scrollIntoView({
         behavior: 'smooth',
@@ -517,10 +483,6 @@ export default defineNuxtPlugin((nuxtApp) => {
           !shouldSkipElement(button)
         ) {
           button.focus();
-          console.log(
-            '[webOS Input] Initial focus on Play button:',
-            button.textContent?.trim(),
-          );
           return;
         }
       }
@@ -539,11 +501,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       const element = document.querySelector(selector) as HTMLElement;
       if (element && isVisible(element)) {
         element.focus();
-        console.log(
-          '[webOS Input] Initial focus on:',
-          element.tagName,
-          element.className,
-        );
         return;
       }
     }
