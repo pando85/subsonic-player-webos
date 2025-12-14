@@ -135,11 +135,8 @@ export default defineNuxtPlugin((nuxtApp) => {
    * to allow jumping directly between album images
    */
   function shouldSkipElement(element: Element): boolean {
-    // Skip track seeker input (progress bar) - use skip buttons instead
-    if (
-      element.tagName === 'INPUT' &&
-      element.closest('[class*="trackSeeker"]')
-    ) {
+    // Skip all elements inside track seeker (progress bar) - use skip buttons instead
+    if (element.closest('[class*="trackSeeker"]')) {
       return true;
     }
 
