@@ -1,5 +1,7 @@
 import type { UseFetchOptions } from '#app';
 
+import { defineEventHandler, getCookie, getQuery } from 'h3';
+
 export default defineEventHandler(async (event) => {
   const { id } = getQuery(event);
 

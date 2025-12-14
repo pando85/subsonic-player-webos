@@ -252,8 +252,8 @@ body.webosTV :focus-visible,
 body.webosTV nav ul[class*='mobileNavigation'] a:focus,
 body.webosTV nav ul[class*='mobileNavigation'] a:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px var(--theme-color) !important;
   border-radius: var(--border-radius-small);
+  box-shadow: 0 0 0 4px var(--theme-color) !important;
 }
 
 body.webosTV a:focus,
@@ -262,12 +262,13 @@ body.webosTV a:focus-visible {
 }
 
 /* Enhanced focus for album/artist/playlist image links */
+
 /* Use inset outline + box-shadow to prevent clipping */
 body.webosTV .layoutImage a:focus,
 body.webosTV .layoutImage a:focus-visible {
   display: block;
-  box-shadow: 0 0 0 4px var(--theme-color) !important;
   border-radius: var(--border-radius-large);
+  box-shadow: 0 0 0 4px var(--theme-color) !important;
 }
 
 /* Ensure album image links are block-level for proper focus and dimensions */
