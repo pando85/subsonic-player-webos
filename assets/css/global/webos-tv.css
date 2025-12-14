@@ -249,29 +249,28 @@ body.webosTV h3 a svg {
 
 body.webosTV :focus,
 body.webosTV :focus-visible {
-  outline: 3px solid var(--theme-color, #6313bc) !important;
-  outline-offset: 2px !important;
+  outline: none;
+  box-shadow: 0 0 0 4px var(--theme-color) !important;
+  border-radius: var(--border-radius-small);
 }
 
 /* Enhanced focus for album/artist/playlist image links */
+/* Use inset outline + box-shadow to prevent clipping */
 body.webosTV .layoutImage a:focus,
 body.webosTV .layoutImage a:focus-visible {
   display: block;
-  outline: 4px solid var(--theme-color, #6313bc) !important;
-  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px var(--theme-color) !important;
   border-radius: var(--border-radius-large);
 }
 
 /* Ensure album image links are block-level for proper focus and dimensions */
-body.webosTV .layoutImage a {
-  display: block;
+body.webosTV .layoutImage {
+  padding: 4px !important;
 }
 
 /* Enhanced focus for entire playlist card */
 body.webosTV article[data-test-id='playlist'] a:focus,
 body.webosTV article[data-test-id='playlist'] a:focus-visible {
-  outline: 5px solid var(--theme-color) !important;
-  outline-offset: 3px !important;
   box-shadow: 0 0 25px color-mix(in oklab, var(--theme-color) 60%, transparent) !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
@@ -291,7 +290,6 @@ body.webosTV [class*='actions'] {
 body.webosTV article[data-test-id='playlist'] [class*='dropdown'] {
   display: none !important;
 }
-
 
 /* Hide carousel navigation buttons (Previous/Next slide) on TV */
 body.webosTV [class*='carouselSwiper'] button[class*='previous'],
@@ -327,7 +325,7 @@ body.webosTV .trackRow:focus-within {
   z-index: 1;
   background-color: color-mix(
     in oklab,
-    var(--theme-color, #6313bc) 20%,
+    var(--theme-color) 20%,
     transparent
   ) !important;
 }
@@ -335,8 +333,8 @@ body.webosTV .trackRow:focus-within {
 /* Extra emphasis on the focused play button */
 body.webosTV .trackRow button:focus,
 body.webosTV .trackRow button:focus-visible {
-  outline: 4px solid var(--theme-color-light) !important;
-  outline-offset: 2px !important;
+  outline: none !important;
+  outline-offset: 0 !important;
   background-color: color-mix(
     in oklab,
     var(--theme-color-light) 80%,
@@ -360,7 +358,7 @@ body.webosTV .pageLink:focus-visible {
   /* Very obvious background for testing */
   background-color: color-mix(
     in oklab,
-    var(--theme-color, #6313bc) 40%,
+    var(--theme-color) 40%,
     transparent
   ) !important;
   transform: scale(1.1);
