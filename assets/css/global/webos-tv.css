@@ -253,11 +253,11 @@ body.webosTV nav ul[class*='mobileNavigation'] a:focus,
 body.webosTV nav ul[class*='mobileNavigation'] a:focus-visible {
   outline: none;
   border-radius: var(--border-radius-small);
-  box-shadow: 0 0 0 4px var(--theme-color) !important;
+  box-shadow: 0 0 0 4px var(--theme-color);
 }
 
-body.webosTV a:focus,
-body.webosTV a:focus-visible {
+body.webosTV .trackRow a:focus,
+body.webosTV .trackRow a:focus-visible {
   box-shadow: none !important;
 }
 
