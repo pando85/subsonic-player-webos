@@ -169,6 +169,23 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Check if element or its parent has dimensions
     const rect = el.getBoundingClientRect();
     if (rect.width > 0 && rect.height > 0) {
+      // For swiper slides: only consider visible if the slide is mostly in viewport
+      // This prevents navigating to off-screen slides which would trigger scroll-snap
+      const swiperSlide = el.closest('swiper-slide');
+      if (swiperSlide) {
+        const slideRect = swiperSlide.getBoundingClientRect();
+        const viewportWidth =
+          window.innerWidth || document.documentElement.clientWidth;
+
+        // Check if slide is mostly visible (at least 50% in viewport)
+        const visibleLeft = Math.max(slideRect.left, 0);
+        const visibleRight = Math.min(slideRect.right, viewportWidth);
+        const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+
+        if (visibleWidth < slideRect.width * 0.1) {
+          return false;
+        }
+      }
       return true;
     }
 
@@ -318,11 +335,18 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     if (bestElement) {
       bestElement.focus();
-      bestElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center',
-      });
+
+      // Don't call scrollIntoView for swiper elements - it triggers swiper's
+      // group-based scroll-snap and causes the view to jump entire pages.
+      // Just focus the element; browsers naturally ensure focused elements are visible.
+      const isInSwiper = bestElement.closest('swiper-slide');
+      if (!isInSwiper) {
+        bestElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center',
+        });
+      }
       return true;
     }
 
@@ -357,11 +381,18 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     if (allElements[newIndex]) {
       allElements[newIndex].focus();
-      allElements[newIndex].scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center',
-      });
+
+      // Don't call scrollIntoView for swiper elements - it triggers swiper's
+      // group-based scroll-snap and causes the view to jump entire pages.
+      // Just focus the element; browsers naturally ensure focused elements are visible.
+      const isInSwiper = allElements[newIndex].closest('swiper-slide');
+      if (!isInSwiper) {
+        allElements[newIndex].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center',
+        });
+      }
     }
   }
 
