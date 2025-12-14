@@ -1,19 +1,38 @@
-import type { MockInstance } from 'vitest';
-
 import { cookieMock } from '@/test/fixtures';
 
-import artistApi from './artist';
+vi.mock('ofetch', () => ({
+  $fetch: vi.fn(),
+}));
 
-const $fetchMock = vi.spyOn(globalThis, '$fetch') as MockInstance;
+vi.mock('h3', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('h3')>();
+  return {
+    ...actual,
+    getCookie: vi.fn(),
+  };
+});
+
+const { $fetch } = await import('ofetch');
+const $fetchMock = vi.mocked($fetch);
+
+const { getCookie } = await import('h3');
+const getCookieMock = vi.mocked(getCookie);
+
+const artistApi = (await import('./artist')).default;
 
 describe('artist-api', () => {
+  beforeEach(() => {
+    getCookieMock.mockReturnValue(cookieMock);
+  });
+
   afterEach(() => {
-    vi.stubGlobal('getCookie', () => cookieMock);
+    $fetchMock.mockReset();
+    getCookieMock.mockReset();
   });
 
   describe('when getCookie returns undefined', () => {
     beforeEach(() => {
-      vi.stubGlobal('getCookie', () => undefined);
+      getCookieMock.mockReturnValue(undefined);
     });
 
     it('returns the correct response', async () => {
@@ -88,6 +107,7 @@ describe('artist-api', () => {
         .mockResolvedValueOnce({
           'subsonic-response': {
             artist: {
+              album: [],
               id: 'id',
               name: 'name',
             },
@@ -95,13 +115,19 @@ describe('artist-api', () => {
           },
         })
         .mockResolvedValueOnce({
-          data: {
+          'subsonic-response': {
+            similarSongs2: {
+              song: [],
+            },
             status: 'ok',
           },
         })
         .mockResolvedValueOnce({
-          data: {
+          'subsonic-response': {
             status: 'ok',
+            topSongs: {
+              song: [],
+            },
           },
         });
     });
