@@ -208,6 +208,17 @@ body.webosTV .layoutImage a {
   display: block;
 }
 
+/* Enhanced focus for entire playlist card */
+body.webosTV article[data-test-id='playlist'] a:focus,
+body.webosTV article[data-test-id='playlist'] a:focus-visible {
+  outline: 5px solid var(--theme-color) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 25px
+    color-mix(in oklab, var(--theme-color) 60%, transparent) !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
 /* ============================================
    Disable hover effects on TV (no mouse)
    Hide elements that only appear on hover
@@ -215,6 +226,11 @@ body.webosTV .layoutImage a {
 
 /* Hide hover-only action buttons (like play/favourite on albums) */
 body.webosTV [class*='actions'] {
+  display: none !important;
+}
+
+/* Hide dropdown menus on playlists list (not needed for TV navigation) */
+body.webosTV article[data-test-id='playlist'] [class*='dropdown'] {
   display: none !important;
 }
 
