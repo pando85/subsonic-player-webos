@@ -1,126 +1,70 @@
 /**
  * webOS TV Remote Control & DPAD Navigation Plugin
  *
- * This plugin provides TV-friendly navigation using the remote control's
- * directional pad (DPAD) and action buttons.
+ * Refactored for TV app best practices following webOS industry standards.
  *
  * Features:
- * - Arrow key navigation (up/down/left/right)
- * - Enter/OK key for activation
- * - Back button support (webOS key code 461)
- * - Spatial navigation between focusable elements
- * - Only active on webOS (file:// protocol)
+ * - Improved spatial navigation with grid-based scoring
+ * - Focus history and restoration
+ * - Smart scroll management
+ * - Event debouncing for remote controls
+ * - Proper element filtering
  */
+
+type Direction = 'down' | 'left' | 'right' | 'up';
+
+interface FocusHistory {
+  path: string;
+  elementSelector: string | null;
+  timestamp: number;
+}
+
+interface NavigationState {
+  isProcessing: boolean;
+  lastKeyTime: number;
+  focusHistory: FocusHistory[];
+  currentFocus: HTMLElement | null;
+}
+
+const DEBOUNCE_MS = 80;
+const FOCUS_HISTORY_MAX = 10;
+const SCROLL_MARGIN = 100;
 
 export default defineNuxtPlugin((nuxtApp) => {
   if (typeof window === 'undefined') {
     return;
   }
 
-  // Check if we're on webOS (file:// protocol) or testing mode (?webos=true)
   const isWebOS =
     window.location.protocol === 'file:' ||
     window.location.search.includes('webos=true');
 
-  // Only activate for webOS TV environment
   if (!isWebOS) {
     return;
   }
 
-  // Check if we're on a file system path and need to redirect
   const currentPath = window.location.pathname;
   if (currentPath.includes('/media/')) {
     const router = useRouter();
     router.replace('/');
   }
 
-  // Add webosTV class to body for TV-specific CSS styles
   document.body.classList.add('webosTV');
 
-  // Setup search input toggle behavior for TV (with retry logic)
-  const setupSearchToggle = () => {
-    let searchExpanded = false;
-    let isProcessing = false; // Prevent double-click
-
-    // Find search input first, then traverse to form (avoid :has() selector)
-    const searchInput = document.getElementById(
-      'search-input',
-    ) as HTMLInputElement;
-    const searchForm = searchInput?.closest('form') as HTMLFormElement;
-    const searchWrapper = searchInput?.parentElement as HTMLElement;
-    const searchButton = searchForm?.querySelector(
-      'button[type="submit"]',
-    ) as HTMLButtonElement;
-
-    if (!searchForm || !searchInput || !searchButton || !searchWrapper) {
-      // Retry after DOM is ready
-      setTimeout(setupSearchToggle, 500);
-      return;
-    }
-
-    // Add a custom class to the wrapper for targeting with CSS
-    searchWrapper.classList.add('webos-search-wrapper');
-
-    // Handle search button click with debounce
-    searchButton.addEventListener('click', (evt) => {
-      // Prevent double-firing from TV remote
-      if (isProcessing) {
-        evt.preventDefault();
-        return;
-      }
-
-      if (!searchExpanded) {
-        // Expand search input
-        evt.preventDefault();
-        isProcessing = true;
-        searchExpanded = true;
-        searchForm.classList.add('searchExpanded');
-
-        // Small delay before allowing next action and focusing
-        setTimeout(() => {
-          searchInput.focus();
-          searchInput.select();
-          isProcessing = false;
-        }, 100);
-      } else {
-        // If expanded, let the form submit normally (search)
-        // Don't prevent default - let form submit
-      }
-    });
-
-    // Handle focus loss to collapse search
-    searchInput.addEventListener('blur', () => {
-      if (searchExpanded) {
-        searchExpanded = false;
-        searchForm.classList.remove('searchExpanded');
-      }
-    });
-
-    // Keep search button from triggering blur when clicking it
-    searchButton.addEventListener('mousedown', (evt) => {
-      if (searchExpanded) {
-        evt.preventDefault(); // Prevent blur
-      }
-    });
+  const state: NavigationState = {
+    isProcessing: false,
+    lastKeyTime: 0,
+    focusHistory: [],
+    currentFocus: null,
   };
 
-  setupSearchToggle();
-
-  // Force tablet responsive design by setting viewport to tablet width
-  // This triggers CSS media queries like @media (width >= 769px) for --tablet-up
-  // but we disable hover effects via CSS since TV has no mouse
   const viewport = document.querySelector('meta[name="viewport"]');
   if (viewport) {
     viewport.setAttribute('content', 'width=1024, initial-scale=1');
   }
 
-  /**
-   * Check if we're on an individual album/artist/playlist detail page
-   * vs a list/discovery view
-   */
   function isOnDetailPage(): boolean {
     const path = window.location.pathname;
-    // Individual detail pages (not plural)
     return (
       path.startsWith('/album/') ||
       path.startsWith('/artist/') ||
@@ -129,359 +73,428 @@ export default defineNuxtPlugin((nuxtApp) => {
     );
   }
 
-  /**
-   * Check if an element should be skipped for TV navigation
-   * We skip links inside layoutContent (album titles, artist names)
-   * to allow jumping directly between album images
-   */
+  function isOnLoginPage(): boolean {
+    return window.location.pathname === '/login';
+  }
+
   function shouldSkipElement(element: Element): boolean {
-    // Skip all elements inside track seeker (progress bar) - use skip buttons instead
-    if (element.closest('[class*="trackSeeker"]')) {
+    const el = element as HTMLElement;
+
+    if (el.closest('[class*="trackSeeker"]')) {
       return true;
     }
 
-    // Skip links/buttons inside layoutContent (album title, artist links)
-    const layoutContent = element.closest('.layoutContent');
-    if (layoutContent) {
+    if (el.closest('[class*="actions"]')) {
       return true;
     }
 
-    // Skip elements inside hidden action buttons (play/favourite on album hover)
-    // These are the buttons that appear on hover in the album grid
-    const actions = element.closest('[class*="actions"]');
-    if (actions) {
+    if (
+      el.hasAttribute('disabled') ||
+      el.getAttribute('aria-disabled') === 'true'
+    ) {
+      return true;
+    }
+
+    if (el.getAttribute('tabindex') === '-1') {
+      return true;
+    }
+
+    if (!isOnDetailPage()) {
+      if (el.closest('.layoutContent')) {
+        return true;
+      }
+    }
+
+    const computedStyle = window.getComputedStyle(el);
+    if (
+      computedStyle.display === 'none' ||
+      computedStyle.visibility === 'hidden'
+    ) {
       return true;
     }
 
     return false;
   }
 
-  /**
-   * Check if an element is visible
-   */
   function isVisible(element: Element): boolean {
     if (!element) return false;
     const el = element as HTMLElement;
 
-    // Check if element or its parent has dimensions
     const rect = el.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      // For swiper slides: only consider visible if the slide is mostly in viewport
-      // This prevents navigating to off-screen slides which would trigger scroll-snap
-      const swiperSlide = el.closest('swiper-slide');
-      if (swiperSlide) {
-        const slideRect = swiperSlide.getBoundingClientRect();
-        const viewportWidth =
-          window.innerWidth || document.documentElement.clientWidth;
-
-        // Check if slide is mostly visible (at least 50% in viewport)
-        const visibleLeft = Math.max(slideRect.left, 0);
-        const visibleRight = Math.min(slideRect.right, viewportWidth);
-        const visibleWidth = Math.max(0, visibleRight - visibleLeft);
-
-        if (visibleWidth < slideRect.width * 0.1) {
-          return false;
-        }
-      }
-      return true;
+    if (rect.width <= 0 || rect.height <= 0) {
+      return false;
     }
 
-    // Fallback to offset dimensions
-    if (el.offsetWidth > 0 && el.offsetHeight > 0) {
-      return true;
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth;
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+
+    const isInViewport =
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < viewportHeight &&
+      rect.left < viewportWidth;
+
+    if (!isInViewport) {
+      return false;
     }
 
-    // For anchor tags, check if they have visible children
-    if (el.tagName === 'A') {
-      const firstChild = el.firstElementChild;
-      if (firstChild) {
-        const childRect = firstChild.getBoundingClientRect();
-        return childRect.width > 0 && childRect.height > 0;
+    const swiperSlide = el.closest('swiper-slide');
+    if (swiperSlide) {
+      const slideRect = swiperSlide.getBoundingClientRect();
+      const visibleLeft = Math.max(slideRect.left, 0);
+      const visibleRight = Math.min(slideRect.right, viewportWidth);
+      const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+
+      if (visibleWidth < slideRect.width * 0.3) {
+        return false;
       }
     }
 
-    return false;
+    return true;
   }
 
-  /**
-   * Get all focusable elements on the page
-   */
   function getFocusableElements(): HTMLElement[] {
     const selectors = [
-      'a[href]',
-      'button:not([disabled])',
-      'input:not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
+      'a[href]:not([tabindex="-1"])',
+      'button:not([disabled]):not([tabindex="-1"])',
+      'input:not([disabled]):not([tabindex="-1"])',
+      'select:not([disabled]):not([tabindex="-1"])',
+      'textarea:not([disabled]):not([tabindex="-1"])',
       '[tabindex]:not([tabindex="-1"])',
-      '[contenteditable]',
-      '.focusable',
+      '[contenteditable]:not([tabindex="-1"])',
     ].join(',');
 
     const elements = document.querySelectorAll(selectors);
-    const filtered = Array.from(elements).filter(
+    return Array.from(elements).filter(
       (el) => isVisible(el) && !shouldSkipElement(el),
     ) as HTMLElement[];
-
-    return filtered;
   }
 
-  /**
-   * Find the index of the current element in the focusable list
-   */
-  function findCurrentIndex(
-    allElements: HTMLElement[],
-    currentNode: Element | null,
-  ): number {
-    if (!currentNode) return -1;
-    for (let i = 0; i < allElements.length; i++) {
-      if (currentNode.isEqualNode(allElements[i])) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  /**
-   * Get element's bounding rect with some useful computed properties
-   */
-  function getElementRect(el: HTMLElement): {
-    centerX: number;
-    centerY: number;
+  function getElementCenter(el: HTMLElement): {
+    x: number;
+    y: number;
     rect: DOMRect;
   } {
     const rect = el.getBoundingClientRect();
     return {
-      centerX: rect.left + rect.width / 2,
-      centerY: rect.top + rect.height / 2,
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
       rect,
     };
   }
 
-  /**
-   * Check if two elements overlap on an axis (with tolerance)
-   */
-  function hasOverlap(
-    aStart: number,
-    aEnd: number,
-    bStart: number,
-    bEnd: number,
-    tolerance: number = 0,
-  ): boolean {
-    return aStart - tolerance < bEnd && aEnd + tolerance > bStart;
+  function calculateDistance(
+    current: DOMRect,
+    target: DOMRect,
+    direction: Direction,
+  ): number {
+    let dx = 0;
+    let dy = 0;
+
+    switch (direction) {
+      case 'up':
+        dy = current.top - target.bottom;
+        dx = Math.abs(
+          current.left + current.width / 2 - (target.left + target.width / 2),
+        );
+        break;
+      case 'down':
+        dy = target.top - current.bottom;
+        dx = Math.abs(
+          current.left + current.width / 2 - (target.left + target.width / 2),
+        );
+        break;
+      case 'left':
+        dx = current.left - target.right;
+        dy = Math.abs(
+          current.top + current.height / 2 - (target.top + target.height / 2),
+        );
+        break;
+      case 'right':
+        dx = target.left - current.right;
+        dy = Math.abs(
+          current.top + current.height / 2 - (target.top + target.height / 2),
+        );
+        break;
+    }
+
+    return Math.sqrt(dx * dx + dy * dy);
   }
 
-  /**
-   * Navigate to the nearest element in a direction
-   * Uses a more predictable algorithm that prioritizes:
-   * 1. Elements that are aligned (overlap on the perpendicular axis)
-   * 2. Distance in the primary direction
-   */
-  function navigateSpatial(
-    direction: 'down' | 'left' | 'right' | 'up',
+  function hasOverlap(a: DOMRect, b: DOMRect, tolerance = 0.2): boolean {
+    const aCenter = a.left + a.width / 2;
+    const bCenter = b.left + b.width / 2;
+    const tolerancePx = Math.max(a.width, b.width) * tolerance;
+
+    return Math.abs(aCenter - bCenter) < tolerancePx;
+  }
+
+  function hasVerticalOverlap(
+    a: DOMRect,
+    b: DOMRect,
+    tolerance = 0.2,
   ): boolean {
+    const aCenter = a.top + a.height / 2;
+    const bCenter = b.top + b.height / 2;
+    const tolerancePx = Math.max(a.height, b.height) * tolerance;
+
+    return Math.abs(aCenter - bCenter) < tolerancePx;
+  }
+
+  function isInDirection(
+    current: DOMRect,
+    target: DOMRect,
+    direction: Direction,
+  ): boolean {
+    const threshold = 5;
+
+    switch (direction) {
+      case 'up':
+        return target.bottom <= current.top + threshold;
+      case 'down':
+        return target.top >= current.bottom - threshold;
+      case 'left':
+        return target.right <= current.left + threshold;
+      case 'right':
+        return target.left >= current.right - threshold;
+    }
+  }
+
+  function navigateSpatial(direction: Direction): boolean {
     const allElements = getFocusableElements();
     if (allElements.length === 0) return false;
 
     const currentElement = document.activeElement as HTMLElement;
 
-    // If no element is focused or body is focused, focus the first element
     if (
       !currentElement ||
       currentElement === document.body ||
+      currentElement === document.documentElement ||
       !isVisible(currentElement)
     ) {
-      navigationInit();
+      initializeFocus();
       return true;
     }
 
-    const current = getElementRect(currentElement);
-    const isHorizontal = direction === 'left' || direction === 'right';
-
+    const current = getElementCenter(currentElement);
     let bestElement: HTMLElement | null = null;
     let bestScore = Infinity;
-    let bestIsAligned = false;
 
     for (const element of allElements) {
       if (element === currentElement) continue;
 
-      const target = getElementRect(element);
+      const target = getElementCenter(element);
 
-      // Calculate distances
-      const dx = target.centerX - current.centerX;
-      const dy = target.centerY - current.centerY;
-
-      // Check if element is in the correct direction (with small threshold)
-      let isInDirection = false;
-      let primaryDistance = 0;
-
-      switch (direction) {
-        case 'down':
-          isInDirection = target.rect.top > current.rect.bottom - 10;
-          primaryDistance = target.rect.top - current.rect.bottom;
-          break;
-        case 'left':
-          isInDirection = target.rect.right < current.rect.left + 10;
-          primaryDistance = current.rect.left - target.rect.right;
-          break;
-        case 'right':
-          isInDirection = target.rect.left > current.rect.right - 10;
-          primaryDistance = target.rect.left - current.rect.right;
-          break;
-        case 'up':
-          isInDirection = target.rect.bottom < current.rect.top + 10;
-          primaryDistance = current.rect.top - target.rect.bottom;
-          break;
+      if (!isInDirection(current.rect, target.rect, direction)) {
+        continue;
       }
 
-      if (!isInDirection || primaryDistance < 0) continue;
+      const distance = calculateDistance(current.rect, target.rect, direction);
 
-      // Check alignment - elements that overlap on perpendicular axis are preferred
-      let isAligned: boolean;
-      let perpendicularDistance: number;
-
-      if (isHorizontal) {
-        // For left/right: check vertical overlap
-        isAligned = hasOverlap(
-          current.rect.top,
-          current.rect.bottom,
-          target.rect.top,
-          target.rect.bottom,
-          5, // 5px tolerance
-        );
-        perpendicularDistance = Math.abs(dy);
+      let alignmentBonus = 0;
+      if (direction === 'left' || direction === 'right') {
+        if (hasVerticalOverlap(current.rect, target.rect)) {
+          alignmentBonus = -1000;
+        }
       } else {
-        // For up/down: check horizontal overlap
-        isAligned = hasOverlap(
-          current.rect.left,
-          current.rect.right,
-          target.rect.left,
-          target.rect.right,
-          5, // 5px tolerance
-        );
-        perpendicularDistance = Math.abs(dx);
+        if (hasOverlap(current.rect, target.rect)) {
+          alignmentBonus = -1000;
+        }
       }
 
-      // Calculate score
-      // Aligned elements get a huge bonus (lower score)
-      // Primary distance is the main factor, perpendicular is secondary
-      let score: number;
+      const score = distance + alignmentBonus;
 
-      if (isAligned) {
-        // Aligned: primarily care about distance in the navigation direction
-        score = primaryDistance + perpendicularDistance * 0.1;
-      } else {
-        // Not aligned: heavily penalize perpendicular distance
-        score = primaryDistance + perpendicularDistance * 5;
-      }
-
-      // Prefer aligned elements even if slightly farther away
-      const isBetterChoice =
-        (isAligned && !bestIsAligned) ||
-        (isAligned === bestIsAligned && score < bestScore);
-
-      if (isBetterChoice) {
+      if (score < bestScore) {
         bestScore = score;
         bestElement = element;
-        bestIsAligned = isAligned;
       }
     }
 
     if (bestElement) {
-      bestElement.focus();
-
-      // Don't call scrollIntoView for swiper elements - it triggers swiper's
-      // group-based scroll-snap and causes the view to jump entire pages.
-      // Just focus the element; browsers naturally ensure focused elements are visible.
-      const isInSwiper = bestElement.closest('swiper-slide');
-      if (!isInSwiper) {
-        bestElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'center',
-        });
-      }
+      focusElement(bestElement);
       return true;
     }
 
     return false;
   }
 
-  /**
-   * Simple linear navigation (fallback)
-   */
-  function navigateLinear(amount: number): void {
-    const allElements = getFocusableElements();
+  function focusElement(element: HTMLElement, scroll = true): void {
+    element.focus({ preventScroll: true });
+    state.currentFocus = element;
 
-    if (allElements.length === 0) return;
+    if (scroll) {
+      smartScrollIntoView(element);
+    }
 
-    const currentElement = document.activeElement;
+    saveFocusHistory();
+  }
 
-    if (
-      !currentElement ||
-      currentElement === document.body ||
-      !isVisible(currentElement)
-    ) {
-      navigationInit();
+  function smartScrollIntoView(element: HTMLElement): void {
+    if (element.closest('swiper-slide')) {
       return;
     }
 
-    const currentIndex = findCurrentIndex(allElements, currentElement);
-    let newIndex = currentIndex + amount;
+    const rect = element.getBoundingClientRect();
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth;
 
-    // Wrap around
-    if (newIndex < 0) newIndex = allElements.length - 1;
-    if (newIndex >= allElements.length) newIndex = 0;
+    const needsVerticalScroll =
+      rect.top < SCROLL_MARGIN || rect.bottom > viewportHeight - SCROLL_MARGIN;
+    const needsHorizontalScroll =
+      rect.left < SCROLL_MARGIN || rect.right > viewportWidth - SCROLL_MARGIN;
 
-    if (allElements[newIndex]) {
-      allElements[newIndex].focus();
+    if (needsVerticalScroll || needsHorizontalScroll) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center',
+      });
+    }
+  }
 
-      // Don't call scrollIntoView for swiper elements - it triggers swiper's
-      // group-based scroll-snap and causes the view to jump entire pages.
-      // Just focus the element; browsers naturally ensure focused elements are visible.
-      const isInSwiper = allElements[newIndex].closest('swiper-slide');
-      if (!isInSwiper) {
-        allElements[newIndex].scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'center',
-        });
+  function saveFocusHistory(): void {
+    const path = window.location.pathname;
+    const element = document.activeElement as HTMLElement;
+
+    if (!element || element === document.body) return;
+
+    const selector = generateElementSelector(element);
+    const historyEntry: FocusHistory = {
+      path,
+      elementSelector: selector,
+      timestamp: Date.now(),
+    };
+
+    state.focusHistory = state.focusHistory.filter((h) => h.path !== path);
+    state.focusHistory.push(historyEntry);
+
+    if (state.focusHistory.length > FOCUS_HISTORY_MAX) {
+      state.focusHistory = state.focusHistory.slice(-FOCUS_HISTORY_MAX);
+    }
+  }
+
+  function generateElementSelector(element: HTMLElement): string | null {
+    if (element.id) {
+      return `#${element.id}`;
+    }
+
+    if (element.getAttribute('data-test-id')) {
+      return `[data-test-id="${element.getAttribute('data-test-id')}"]`;
+    }
+
+    const classes = element.className;
+    if (classes && typeof classes === 'string') {
+      const classList = classes.split(' ').filter((c) => c && !c.includes(':'));
+      if (classList.length > 0) {
+        return `${element.tagName.toLowerCase()}.${classList[0]}`;
       }
     }
+
+    return null;
   }
 
-  /**
-   * Handle arrow key navigation
-   */
-  function handleArrowUp(): void {
-    if (!navigateSpatial('up')) {
-      navigateLinear(-1);
+  function restoreFocus(): boolean {
+    const path = window.location.pathname;
+    const historyEntry = state.focusHistory.find((h) => h.path === path);
+
+    if (historyEntry?.elementSelector) {
+      try {
+        const element = document.querySelector(
+          historyEntry.elementSelector,
+        ) as HTMLElement;
+        if (element && isVisible(element) && !shouldSkipElement(element)) {
+          focusElement(element);
+          return true;
+        }
+      } catch {
+        // Selector might be invalid
+      }
+    }
+
+    return false;
+  }
+
+  function initializeFocus(): void {
+    if (restoreFocus()) {
+      return;
+    }
+
+    const allElements = getFocusableElements();
+
+    if (isOnDetailPage()) {
+      const playAllButton = document.getElementById('play-all-button');
+      if (playAllButton && isVisible(playAllButton)) {
+        focusElement(playAllButton);
+        return;
+      }
+
+      const buttons = document.querySelectorAll('button');
+      for (const button of buttons) {
+        if (
+          button.textContent?.toLowerCase().includes('play') &&
+          isVisible(button) &&
+          !shouldSkipElement(button)
+        ) {
+          focusElement(button as HTMLElement);
+          return;
+        }
+      }
+    }
+
+    if (isOnLoginPage()) {
+      const firstInput = document.querySelector(
+        'input:not([type="hidden"]):not([type="checkbox"])',
+      ) as HTMLElement;
+      if (firstInput && isVisible(firstInput)) {
+        focusElement(firstInput);
+        return;
+      }
+    }
+
+    const prioritySelectors = [
+      'button.primary',
+      'button[type="submit"]',
+      '.pageLink.active',
+      'a[href].active',
+      'input:not([type="hidden"]):not([type="checkbox"])',
+      'button:not([disabled])',
+      'a[href]',
+    ];
+
+    for (const selector of prioritySelectors) {
+      const element = document.querySelector(selector) as HTMLElement;
+      if (element && isVisible(element) && !shouldSkipElement(element)) {
+        focusElement(element);
+        return;
+      }
+    }
+
+    if (allElements.length > 0) {
+      focusElement(allElements[0]);
     }
   }
 
-  function handleArrowDown(): void {
-    if (!navigateSpatial('down')) {
-      navigateLinear(1);
+  function debounce(func: () => void): void {
+    const now = Date.now();
+    if (now - state.lastKeyTime < DEBOUNCE_MS) {
+      return;
     }
+    state.lastKeyTime = now;
+
+    if (state.isProcessing) {
+      return;
+    }
+
+    state.isProcessing = true;
+    func();
+    state.isProcessing = false;
   }
 
-  function handleArrowLeft(): void {
-    if (!navigateSpatial('left')) {
-      navigateLinear(-1);
-    }
-  }
-
-  function handleArrowRight(): void {
-    if (!navigateSpatial('right')) {
-      navigateLinear(1);
-    }
-  }
-
-  /**
-   * Handle back button
-   */
   function handleBack(): void {
-    // Try to use webOS platform back if available
     if (
       'webOS' in window &&
       (window as unknown as { webOS?: { platformBack?: () => void } }).webOS
@@ -493,20 +506,15 @@ export default defineNuxtPlugin((nuxtApp) => {
       return;
     }
 
-    // Otherwise use browser history
     const router = useRouter();
     if (window.history.length > 1) {
       router.back();
     }
   }
 
-  /**
-   * Handle OK/Enter button
-   */
   function handleOK(): void {
     const activeElement = document.activeElement as HTMLElement;
     if (activeElement && activeElement !== document.body) {
-      // For checkboxes, toggle the checked state
       if (
         activeElement instanceof HTMLInputElement &&
         activeElement.type === 'checkbox'
@@ -516,147 +524,156 @@ export default defineNuxtPlugin((nuxtApp) => {
         return;
       }
 
-      // For other elements, trigger a click
       activeElement.click();
     }
   }
 
-  /**
-   * Initialize navigation - focus the first visible focusable element
-   */
-  function navigationInit(): void {
-    const allElements = getFocusableElements();
-    const isDetailPage = isOnDetailPage();
+  function setupSearchToggle(): void {
+    let searchExpanded = false;
+    let searchIsProcessing = false;
 
-    // On detail pages (album, artist, playlist), prioritize Play All button
-    if (isDetailPage) {
-      // Try to find Play All button by ID first
-      const playAllButton = document.getElementById('play-all-button');
-      if (playAllButton && isVisible(playAllButton)) {
-        playAllButton.focus();
-        return;
-      }
-
-      // Fallback: find any button with "play" in text (case insensitive)
-      const buttons = document.querySelectorAll('button');
-      for (const button of buttons) {
-        if (
-          button.textContent?.toLowerCase().includes('play') &&
-          isVisible(button) &&
-          !shouldSkipElement(button)
-        ) {
-          button.focus();
-          return;
-        }
-      }
-    }
-
-    // Try to find a good initial element to focus
-    // Priority: 1) buttons with specific classes, 2) first input, 3) first focusable
-    const prioritySelectors = [
+    const searchInput = document.getElementById(
+      'search-input',
+    ) as HTMLInputElement;
+    const searchForm = searchInput?.closest('form') as HTMLFormElement;
+    const searchWrapper = searchInput?.parentElement as HTMLElement;
+    const searchButton = searchForm?.querySelector(
       'button[type="submit"]',
-      'input:not([type="hidden"])',
-      'a[href]',
-      'button',
-    ];
+    ) as HTMLButtonElement;
 
-    for (const selector of prioritySelectors) {
-      const element = document.querySelector(selector) as HTMLElement;
-      if (element && isVisible(element)) {
-        element.focus();
+    if (!searchForm || !searchInput || !searchButton || !searchWrapper) {
+      setTimeout(setupSearchToggle, 500);
+      return;
+    }
+
+    searchWrapper.classList.add('webos-search-wrapper');
+
+    searchButton.addEventListener('click', (evt) => {
+      if (searchIsProcessing) {
+        evt.preventDefault();
         return;
       }
-    }
 
-    // Fallback to first focusable element
-    if (allElements.length > 0) {
-      allElements[0].focus();
-    }
+      if (!searchExpanded) {
+        evt.preventDefault();
+        searchIsProcessing = true;
+        searchExpanded = true;
+        searchForm.classList.add('searchExpanded');
+
+        setTimeout(() => {
+          searchInput.focus();
+          searchInput.select();
+          searchIsProcessing = false;
+        }, 100);
+      }
+    });
+
+    searchInput.addEventListener('blur', () => {
+      if (searchExpanded) {
+        searchExpanded = false;
+        searchForm.classList.remove('searchExpanded');
+      }
+    });
+
+    searchButton.addEventListener('mousedown', (evt) => {
+      if (searchExpanded) {
+        evt.preventDefault();
+      }
+    });
   }
 
-  /**
-   * Main keydown event handler
-   */
   function onKeyDown(evt: KeyboardEvent): void {
     const keyCode = evt.keyCode;
 
-    // Log for debugging
+    if (
+      document.activeElement instanceof HTMLInputElement &&
+      document.activeElement.type !== 'checkbox'
+    ) {
+      if (keyCode === 27) {
+        document.activeElement.blur();
+        evt.preventDefault();
+        return;
+      }
+
+      if (keyCode === 13) {
+        return;
+      }
+
+      if ([37, 38, 39, 40].includes(keyCode)) {
+        return;
+      }
+    }
 
     switch (keyCode) {
-      case 10009: // Samsung/Tizen Back button
-      case 461: // webOS Back button
+      case 10009:
+      case 461:
         evt.preventDefault();
-        handleBack();
+        debounce(handleBack);
         break;
-      case 13: // Enter/OK
-        // Don't prevent default for form inputs
+      case 13:
         if (
           !(document.activeElement instanceof HTMLInputElement) ||
           document.activeElement.type === 'checkbox'
         ) {
           evt.preventDefault();
         }
-        handleOK();
+        debounce(handleOK);
         break;
-      case 27: // Escape
+      case 27:
         evt.preventDefault();
-        handleBack();
+        debounce(handleBack);
         break;
-      case 37: // Left Arrow
+      case 37:
         evt.preventDefault();
-        handleArrowLeft();
+        debounce(() => navigateSpatial('left'));
         break;
-      case 38: // Up Arrow
+      case 38:
         evt.preventDefault();
-        handleArrowUp();
+        debounce(() => navigateSpatial('up'));
         break;
-      case 39: // Right Arrow
+      case 39:
         evt.preventDefault();
-        handleArrowRight();
+        debounce(() => navigateSpatial('right'));
         break;
-      case 40: // Down Arrow
+      case 40:
         evt.preventDefault();
-        handleArrowDown();
+        debounce(() => navigateSpatial('down'));
         break;
-      case 8: // Backspace (as back in some contexts)
-        // Only handle as back if not in an input field
+      case 8:
         if (
           !(document.activeElement instanceof HTMLInputElement) &&
           !(document.activeElement instanceof HTMLTextAreaElement)
         ) {
           evt.preventDefault();
-          handleBack();
+          debounce(handleBack);
         }
         break;
     }
   }
 
-  // Add keydown event listener
   document.addEventListener('keydown', onKeyDown);
 
-  // Initialize focus when page loads
-  setTimeout(navigationInit, 200);
+  setupSearchToggle();
 
-  // Re-initialize when route changes
+  setTimeout(initializeFocus, 150);
+
   nuxtApp.hook('page:finish', () => {
-    setTimeout(navigationInit, 200);
+    setTimeout(initializeFocus, 150);
   });
 
-  // Also re-initialize on page transitions
   nuxtApp.hook('page:transition:finish', () => {
-    setTimeout(navigationInit, 200);
+    setTimeout(initializeFocus, 150);
   });
 
-  // Watch for DOM changes and re-initialize if needed
   const observer = new MutationObserver(() => {
-    // Only re-focus if current focus is invalid
     const activeElement = document.activeElement;
     if (
       !activeElement ||
       activeElement === document.body ||
+      activeElement === document.documentElement ||
       !isVisible(activeElement)
     ) {
-      setTimeout(navigationInit, 100);
+      setTimeout(initializeFocus, 100);
     }
   });
 
