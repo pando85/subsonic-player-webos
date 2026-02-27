@@ -26,6 +26,8 @@ interface NavigationState {
   lastKeyTime: number;
 }
 
+type Zone = 'footer' | 'header' | 'main';
+
 const DEBOUNCE_MS = 80;
 const FOCUS_HISTORY_MAX = 10;
 const SCROLL_MARGIN = 100;
@@ -75,6 +77,24 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   function isOnLoginPage(): boolean {
     return window.location.pathname === '/login';
+  }
+
+  function getElementZone(element: HTMLElement): Zone {
+    if (
+      element.closest('[class*="musicPlayer"]') ||
+      element.closest('[class*="MusicPlayer"]') ||
+      element.closest('footer') ||
+      element.closest('[class*="playerControls"]') ||
+      element.closest('[class*="PlayerControls"]')
+    ) {
+      return 'footer';
+    }
+
+    if (element.closest('header') || element.closest('[class*="header"]')) {
+      return 'header';
+    }
+
+    return 'main';
   }
 
   function shouldSkipElement(element: Element): boolean {
@@ -279,6 +299,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     const current = getElementCenter(currentElement);
+    const currentZone = getElementZone(currentElement);
     let bestElement: HTMLElement | null = null;
     let bestScore = Infinity;
 
@@ -292,6 +313,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
 
       const distance = calculateDistance(current.rect, target.rect, direction);
+      const targetZone = getElementZone(element);
 
       let alignmentBonus = 0;
       if (direction === 'left' || direction === 'right') {
@@ -304,7 +326,22 @@ export default defineNuxtPlugin((nuxtApp) => {
         }
       }
 
-      const score = distance + alignmentBonus;
+      let zonePenalty = 0;
+      if (
+        direction === 'down' &&
+        currentZone === 'header' &&
+        targetZone === 'footer'
+      ) {
+        zonePenalty = 5000;
+      } else if (
+        direction === 'up' &&
+        currentZone === 'footer' &&
+        targetZone === 'header'
+      ) {
+        zonePenalty = 5000;
+      }
+
+      const score = distance + alignmentBonus + zonePenalty;
 
       if (score < bestScore) {
         bestScore = score;
@@ -546,7 +583,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       return;
     }
 
-    searchWrapper.classList.add('webos-search-wrapper');
+    searchWrapper.classList.add('webosSearchWrapper');
 
     searchButton.addEventListener('click', (evt) => {
       if (searchIsProcessing) {

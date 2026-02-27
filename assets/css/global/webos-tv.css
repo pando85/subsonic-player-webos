@@ -155,7 +155,7 @@ body.webosTV form {
   position: relative;
 }
 
-body.webosTV .webos-search-wrapper {
+body.webosTV .webosSearchWrapper {
   width: 0 !important;
   min-width: 0 !important;
   overflow: hidden !important;
@@ -172,7 +172,7 @@ body.webosTV input[id='search-input'] {
   transition: all 0.3s ease !important;
 }
 
-body.webosTV form.searchExpanded .webos-search-wrapper {
+body.webosTV form.searchExpanded .webosSearchWrapper {
   width: 300px !important;
   min-width: 300px !important;
   margin-right: var(--space-8) !important;
@@ -218,31 +218,31 @@ body.webosTV h3 a svg {
 body.webosTV :focus,
 body.webosTV :focus-visible {
   outline: none !important;
-  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
   border-radius: var(--border-radius-small) !important;
+  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
 }
 
 /* Navigation items */
 body.webosTV nav ul[class*='mobileNavigation'] a:focus,
 body.webosTV nav ul[class*='mobileNavigation'] a:focus-visible {
-  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
   background-color: color-mix(
     in oklab,
     var(--tv-focus-color) 25%,
     transparent
   ) !important;
+  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
   transform: scale(1.05);
 }
 
 /* Page links (Discover, Podcasts, etc.) */
 body.webosTV .pageLink:focus,
 body.webosTV .pageLink:focus-visible {
-  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
   background-color: color-mix(
     in oklab,
     var(--tv-focus-color) 30%,
     transparent
   ) !important;
+  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
   transform: scale(1.05);
 }
 
@@ -276,8 +276,8 @@ body.webosTV swiper-slide[data-test-id='random-genre-item'] {
 
 body.webosTV swiper-slide[data-test-id='random-genre-item']:focus,
 body.webosTV swiper-slide[data-test-id='random-genre-item']:focus-within {
-  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
   border-radius: var(--border-radius-small) !important;
+  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
 }
 
 /* Buttons */
@@ -293,8 +293,8 @@ body.webosTV input:focus,
 body.webosTV input:focus-visible,
 body.webosTV textarea:focus,
 body.webosTV textarea:focus-visible {
-  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
   border-color: var(--tv-focus-color) !important;
+  box-shadow: 0 0 0 var(--tv-focus-outline) var(--tv-focus-color) !important;
 }
 
 /* Links */
@@ -369,31 +369,11 @@ body.webosTV .trackRow button:focus-visible {
   outline: none !important;
   background-color: transparent !important;
   box-shadow: none !important;
+  transform: scale(1.1);
 }
 
 body.webosTV .trackRow .mobileOnly {
   display: none !important;
-}
-
-body.webosTV .trackRow {
-  position: relative;
-}
-
-body.webosTV .trackRow [class*='playPauseWrapper'] {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 1;
-  visibility: visible !important;
-  width: 100% !important;
-  height: 100% !important;
-  opacity: 0 !important;
-  transform: unset !important;
-}
-
-body.webosTV .trackRow [class*='playPauseWrapper'] button {
-  width: 100% !important;
-  height: 100% !important;
-  border-radius: 0 !important;
 }
 
 /* ============================================
