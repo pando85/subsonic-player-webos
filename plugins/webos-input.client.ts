@@ -14,16 +14,16 @@
 type Direction = 'down' | 'left' | 'right' | 'up';
 
 interface FocusHistory {
+  elementSelector: null | string;
   path: string;
-  elementSelector: string | null;
   timestamp: number;
 }
 
 interface NavigationState {
+  currentFocus: HTMLElement | null;
+  focusHistory: FocusHistory[];
   isProcessing: boolean;
   lastKeyTime: number;
-  focusHistory: FocusHistory[];
-  currentFocus: HTMLElement | null;
 }
 
 const DEBOUNCE_MS = 80;
@@ -52,10 +52,10 @@ export default defineNuxtPlugin((nuxtApp) => {
   document.body.classList.add('webosTV');
 
   const state: NavigationState = {
+    currentFocus: null,
+    focusHistory: [],
     isProcessing: false,
     lastKeyTime: 0,
-    focusHistory: [],
-    currentFocus: null,
   };
 
   const viewport = document.querySelector('meta[name="viewport"]');
@@ -173,15 +173,15 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   function getElementCenter(el: HTMLElement): {
+    rect: DOMRect;
     x: number;
     y: number;
-    rect: DOMRect;
   } {
     const rect = el.getBoundingClientRect();
     return {
+      rect,
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,
-      rect,
     };
   }
 
@@ -194,12 +194,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     let dy = 0;
 
     switch (direction) {
-      case 'up':
-        dy = current.top - target.bottom;
-        dx = Math.abs(
-          current.left + current.width / 2 - (target.left + target.width / 2),
-        );
-        break;
       case 'down':
         dy = target.top - current.bottom;
         dx = Math.abs(
@@ -216,6 +210,12 @@ export default defineNuxtPlugin((nuxtApp) => {
         dx = target.left - current.right;
         dy = Math.abs(
           current.top + current.height / 2 - (target.top + target.height / 2),
+        );
+        break;
+      case 'up':
+        dy = current.top - target.bottom;
+        dx = Math.abs(
+          current.left + current.width / 2 - (target.left + target.width / 2),
         );
         break;
     }
@@ -251,14 +251,14 @@ export default defineNuxtPlugin((nuxtApp) => {
     const threshold = 5;
 
     switch (direction) {
-      case 'up':
-        return target.bottom <= current.top + threshold;
       case 'down':
         return target.top >= current.bottom - threshold;
       case 'left':
         return target.right <= current.left + threshold;
       case 'right':
         return target.left >= current.right - threshold;
+      case 'up':
+        return target.bottom <= current.top + threshold;
     }
   }
 
@@ -364,8 +364,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     const selector = generateElementSelector(element);
     const historyEntry: FocusHistory = {
-      path,
       elementSelector: selector,
+      path,
       timestamp: Date.now(),
     };
 
@@ -377,7 +377,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
   }
 
-  function generateElementSelector(element: HTMLElement): string | null {
+  function generateElementSelector(element: HTMLElement): null | string {
     if (element.id) {
       return `#${element.id}`;
     }
