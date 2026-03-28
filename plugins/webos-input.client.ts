@@ -218,6 +218,23 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   /**
+   * Get the navigation zone for an element
+   * - 'header': top < 70px and left >= 100px (user menu, dark mode)
+   * - 'main': main content area
+   * - 'sidebar': left < 100px (Browse, Your library, Playlists)
+   */
+  function getNavigationZone(element: Element): 'header' | 'main' | 'sidebar' {
+    const rect = element.getBoundingClientRect();
+    if (rect.left < 100) {
+      return 'sidebar';
+    }
+    if (rect.top < 70) {
+      return 'header';
+    }
+    return 'main';
+  }
+
+  /**
    * Check if an element is visible
    */
   function isVisible(element: Element): boolean {
@@ -357,6 +374,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     const current = getElementRect(currentElement);
+    const currentZone = getNavigationZone(currentElement);
     const isHorizontal = direction === 'left' || direction === 'right';
 
     let bestElement: HTMLElement | null = null;
@@ -365,6 +383,52 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     for (const element of allElements) {
       if (element === currentElement) continue;
+
+      const targetZone = getNavigationZone(element);
+
+      // Zone-based navigation rules:
+      // - In main content: stay in main (skip sidebar/header unless explicit direction)
+      // - In sidebar: can go RIGHT to main, UP/DOWN stays in sidebar
+      // - In header: can go DOWN to main
+
+      if (currentZone === 'main') {
+        // When in main content:
+        // - UP: stay in main (don't jump to header)
+        // - DOWN: stay in main
+        // - LEFT: stay in main (don't jump to sidebar unless no elements left)
+        // - RIGHT: stay in main
+        if (direction === 'up' && targetZone === 'header') {
+          continue; // Skip header when going up from main
+        }
+        if (direction === 'left' && targetZone === 'sidebar') {
+          continue; // Skip sidebar when going left from main
+        }
+        // Also skip sidebar when going up/down from main
+        if (
+          (direction === 'up' || direction === 'down') &&
+          targetZone === 'sidebar'
+        ) {
+          continue;
+        }
+      } else if (currentZone === 'sidebar') {
+        // When in sidebar:
+        // - UP/DOWN: stay in sidebar
+        // - RIGHT: go to main
+        // - LEFT: stay in sidebar (or nowhere to go)
+        if (
+          (direction === 'up' || direction === 'down') &&
+          targetZone !== 'sidebar'
+        ) {
+          continue;
+        }
+      } else if (currentZone === 'header') {
+        // When in header:
+        // - DOWN: go to main
+        // - UP: nowhere
+        if (direction === 'down' && targetZone === 'sidebar') {
+          continue; // Don't go from header to sidebar
+        }
+      }
 
       const target = getElementRect(element);
 
