@@ -218,20 +218,79 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   /**
-   * Get the navigation zone for an element
-   * - 'header': top < 70px and left >= 100px (user menu, dark mode)
-   * - 'main': main content area
-   * - 'sidebar': left < 100px (Browse, Your library, Playlists)
+   * Navigation zones for deterministic navigation
+   * - 'sidebar': inside the sidebar navigation (Browse, Your library, Playlists)
+   * - 'header': top < 70px and not in sidebar/player (user menu, dark mode)
+   * - 'player': inside the music player
+   * - 'content': main content area (albums, tracks, page tabs, etc.)
    */
-  function getNavigationZone(element: Element): 'header' | 'main' | 'sidebar' {
-    const rect = element.getBoundingClientRect();
-    if (rect.left < 100) {
-      return 'sidebar';
+  type NavigationZone = 'content' | 'header' | 'player' | 'sidebar';
+
+  function getNavigationZone(element: Element): NavigationZone {
+    // 1. Check if inside the music player FIRST (highest priority)
+    if (isInsidePlayer(element)) {
+      return 'player';
     }
+
+    // 2. Check if inside the sidebar navigation by DOM structure
+    // Sidebar elements are inside nav > ul with mobileNavigation class
+    const sidebarNav = element.closest('nav ul, [class*="mobileNavigation"]');
+    if (sidebarNav) {
+      // Check if this is the actual sidebar (not the page tabs navigation)
+      const nav = element.closest('nav');
+      if (nav) {
+        // The sidebar has links like Browse, Your library, Playlists
+        // The page tabs have links like Discover, Podcasts, Radio Stations
+        const text = element.textContent?.trim().toLowerCase() || '';
+        if (
+          text === 'browse' ||
+          text === 'your library' ||
+          text === 'playlists' ||
+          element.closest('[class*="sidebarNavigation"]')
+        ) {
+          return 'sidebar';
+        }
+      }
+    }
+
+    // 3. Position-based header check
+    const rect = element.getBoundingClientRect();
     if (rect.top < 70) {
       return 'header';
     }
-    return 'main';
+
+    // 4. Default to content
+    return 'content';
+  }
+
+  /**
+   * Check if element is inside the music player (not just any fixed element)
+   * This specifically targets the music player and queue, not header/sidebar
+   */
+  function isInsidePlayer(element: Element): boolean {
+    // Check if inside the music player
+    const musicPlayer = element.closest('[class*="musicPlayer"]');
+    if (musicPlayer) {
+      return true;
+    }
+
+    // Check if inside the queue wrapper
+    const queueWrapper = element.closest('.queueWrapper');
+    if (queueWrapper) {
+      return true;
+    }
+
+    // Check if inside footer that contains player
+    const footer = element.closest('footer');
+    if (footer) {
+      const footerRect = footer.getBoundingClientRect();
+      // Player footer is near bottom of screen
+      if (footerRect.top > window.innerHeight - 200) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -387,33 +446,29 @@ export default defineNuxtPlugin((nuxtApp) => {
       const targetZone = getNavigationZone(element);
 
       // Zone-based navigation rules:
-      // - In main content: stay in main (skip sidebar/header unless explicit direction)
-      // - In sidebar: can go RIGHT to main, UP/DOWN stays in sidebar
-      // - In header: can go DOWN to main
+      // - In content: stay in content (skip sidebar/header/player)
+      // - In sidebar: can go RIGHT to content, UP/DOWN stays in sidebar
+      // - In header: can go DOWN to content
+      // - In player: can go UP to content
 
-      if (currentZone === 'main') {
+      if (currentZone === 'content') {
         // When in main content:
-        // - UP: stay in main (don't jump to header)
-        // - DOWN: stay in main
-        // - LEFT: stay in main (don't jump to sidebar unless no elements left)
-        // - RIGHT: stay in main
-        if (direction === 'up' && targetZone === 'header') {
-          continue; // Skip header when going up from main
+        // - UP/DOWN: stay in content (don't jump to header/sidebar/player)
+        // - LEFT: stay in content
+        // - RIGHT: stay in content
+        if (targetZone === 'header') {
+          continue; // Skip header when navigating from content
         }
-        if (direction === 'left' && targetZone === 'sidebar') {
-          continue; // Skip sidebar when going left from main
+        if (targetZone === 'sidebar') {
+          continue; // Skip sidebar when navigating from content
         }
-        // Also skip sidebar when going up/down from main
-        if (
-          (direction === 'up' || direction === 'down') &&
-          targetZone === 'sidebar'
-        ) {
-          continue;
+        if (targetZone === 'player') {
+          continue; // Skip player - only accessible from bottom of content
         }
       } else if (currentZone === 'sidebar') {
         // When in sidebar:
         // - UP/DOWN: stay in sidebar
-        // - RIGHT: go to main
+        // - RIGHT: go to content
         // - LEFT: stay in sidebar (or nowhere to go)
         if (
           (direction === 'up' || direction === 'down') &&
@@ -423,10 +478,26 @@ export default defineNuxtPlugin((nuxtApp) => {
         }
       } else if (currentZone === 'header') {
         // When in header:
-        // - DOWN: go to main
+        // - DOWN: go to content
         // - UP: nowhere
         if (direction === 'down' && targetZone === 'sidebar') {
           continue; // Don't go from header to sidebar
+        }
+        if (targetZone === 'player') {
+          continue; // Don't go from header to player
+        }
+      } else if (currentZone === 'player') {
+        // When in player:
+        // - UP: go to content
+        // - LEFT/RIGHT: stay in player
+        if (direction === 'up' && targetZone !== 'content') {
+          continue;
+        }
+        if (
+          (direction === 'left' || direction === 'right') &&
+          targetZone !== 'player'
+        ) {
+          continue;
         }
       }
 
@@ -579,13 +650,47 @@ export default defineNuxtPlugin((nuxtApp) => {
    * Handle arrow key navigation
    */
   function handleArrowUp(): void {
+    const currentElement = document.activeElement as HTMLElement;
+    const currentZone = currentElement
+      ? getNavigationZone(currentElement)
+      : null;
+
+    // If in player, allow going UP to content
+    if (currentZone === 'player') {
+      if (!navigateSpatial('up')) {
+        navigateLinear(-1);
+      }
+      return;
+    }
+
     if (!navigateSpatial('up')) {
       navigateLinear(-1);
     }
   }
 
   function handleArrowDown(): void {
-    if (!navigateSpatial('down')) {
+    const currentElement = document.activeElement as HTMLElement;
+    const currentZone = currentElement
+      ? getNavigationZone(currentElement)
+      : null;
+
+    // If in content and no elements found below, try to reach player
+    if (currentZone === 'content' && !navigateSpatial('down')) {
+      // Check if player exists and has focusable elements
+      const playerElements = getFocusableElements().filter(
+        (el) => getNavigationZone(el) === 'player',
+      );
+      if (playerElements.length > 0) {
+        // Focus the first player element
+        playerElements[0].focus();
+        playerElements[0].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      } else {
+        navigateLinear(1);
+      }
+    } else if (!navigateSpatial('down')) {
       navigateLinear(1);
     }
   }
