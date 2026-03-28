@@ -1,7 +1,7 @@
 {
   "appDescription": "A web-based Subsonic music player.",
   "id": "com.subsonic.player",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "vendor": "Subsonic Player",
   "type": "web",
   "main": "index.html",
