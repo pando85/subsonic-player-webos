@@ -3,13 +3,7 @@
   if (typeof window === 'undefined') return;
 
   if (typeof globalThis === 'undefined') {
-    Object.defineProperty(Object.prototype, '__globalThis__', {
-      get: function () { return this; },
-      configurable: true,
-    });
-    // eslint-disable-next-line no-undef
-    __globalThis__;
-    delete Object.prototype.__globalThis__;
+    window.globalThis = window;
   }
 
   if (typeof Promise.prototype.finally !== 'function') {
@@ -140,7 +134,4 @@
     };
   }
 
-  if (typeof window.customElements === 'undefined' && window.customElements) {
-    // customElements should exist in Chromium 68, but guard against missing API
-  }
 })();
