@@ -12,21 +12,23 @@ const IMPORT_DIRECTORIES = [
   'utils/**',
 ];
 
+const isWebOSBuild = process.env.WEBOS_BUILD === 'true';
+
 const ENVIRONMENT_VARIABLES = {
   IMAGE_SIZE: process.env.IMAGE_SIZE || '500',
   LOAD_SIZE: process.env.LOAD_SIZE || '50',
   MAIN_APP_TITLE: process.env.MAIN_APP_TITLE || 'Music App',
   SERVER_URL: process.env.SERVER_URL || '',
-  // webOS builds are always SPA mode (no SSR, no server API)
-  SPA_MODE:
-    process.env.SPA_MODE === 'true' || process.env.WEBOS_BUILD === 'true',
+  SPA_MODE: isWebOSBuild || process.env.SPA_MODE === 'true',
 };
 
 export default defineNuxtConfig({
   app: {
     baseURL: './',
     buildAssetsDir: '_nuxt/',
-    head: {},
+    head: {
+      script: isWebOSBuild ? [{ src: './polyfills.js' }] : [],
+    },
   },
   builder: 'vite',
   compatibilityDate: '2024-04-03',
@@ -37,7 +39,6 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false,
     payloadExtraction: false,
-    resetAsyncDataToUndefined: false,
   },
   features: {
     inlineStyles: process.env.WEBOS_BUILD !== 'true',
@@ -95,6 +96,7 @@ export default defineNuxtConfig({
   vite: {
     build: {
       assetsDir: '_nuxt',
+      target: isWebOSBuild ? 'es2017' : undefined,
     },
   },
 });

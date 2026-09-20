@@ -37,8 +37,28 @@ find webos -name "*.html" -type f -exec sed -i 's| crossorigin||g' {} \;
 echo "🔧 Step 3.7: Removing modulepreload links..."
 find webos -name "*.html" -type f -exec sed -i 's|<link rel="modulepreload"[^>]*>||g' {} \;
 
-# Step 3.8: Fix runtime config baseURL in inline script
-echo "🔧 Step 3.8: Fixing runtime config baseURL..."
+# Step 3.8: Remove importmap (not supported in Chromium 68 / webOS 4.x)
+echo "🔧 Step 3.8: Removing importmap for webOS 4.x compatibility..."
+find webos -name "*.html" -type f -exec sed -i 's|<script type="importmap">[^<]*</script>||g' {} \;
+
+# Step 3.9: Replace #entry imports with actual paths in JS files
+echo "🔧 Step 3.9: Replacing #entry imports with actual paths..."
+# Extract the entry file name from the HTML
+ENTRY_FILE=$(grep -oP '(?<=<script type="module" src="./_nuxt/)[^"]+' webos/index.html | head -1)
+if [ -n "$ENTRY_FILE" ]; then
+  echo "  Entry file: $ENTRY_FILE"
+  # Replace #entry references with the actual entry file path
+  # Handle both "from "#entry"" and "from"#entry"" (minified) patterns
+  find webos/_nuxt -name "*.js" -type f -exec sed -i "s|from\"#entry\"|from\"./$ENTRY_FILE\"|g" {} \;
+  find webos/_nuxt -name "*.js" -type f -exec sed -i "s|from \"#entry\"|from \"./$ENTRY_FILE\"|g" {} \;
+  find webos/_nuxt -name "*.js" -type f -exec sed -i "s|from'#entry'|from'./$ENTRY_FILE'|g" {} \;
+  find webos/_nuxt -name "*.js" -type f -exec sed -i "s|from '#entry'|from './$ENTRY_FILE'|g" {} \;
+  find webos/_nuxt -name "*.js" -type f -exec sed -i "s|import(\"#entry\")|import(\"./$ENTRY_FILE\")|g" {} \;
+  find webos/_nuxt -name "*.js" -type f -exec sed -i "s|import('#entry')|import('./$ENTRY_FILE')|g" {} \;
+fi
+
+# Step 3.10: Fix runtime config baseURL in inline script
+echo "🔧 Step 3.10: Fixing runtime config baseURL..."
 find webos -name "*.html" -type f -exec sed -i 's|baseURL:"/"|baseURL:"./"|g' {} \;
 
 # Step 4: Create icons (using existing favicon)

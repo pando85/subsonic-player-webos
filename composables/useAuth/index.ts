@@ -23,12 +23,20 @@ export function useAuth() {
 
   async function autoLogin() {
     if (!user.value?.server) {
+      clearNuxtData();
+      resetAllUserState();
+      await navigateTo({ name: ROUTE_NAMES.login });
       return;
     }
 
     const { data: loggedIn, error: loginError } = await fetchData('/ping');
 
     if (loginError?.message) {
+      setAuthToken(null);
+      isAuthenticated.value = false;
+      clearNuxtData();
+      resetAllUserState();
+      await navigateTo({ name: ROUTE_NAMES.login });
       return;
     }
 
@@ -69,6 +77,7 @@ export function useAuth() {
       error.value = loginError.message;
       loading.value = false;
       isAuthenticated.value = false;
+      setAuthToken(null);
 
       return;
     }

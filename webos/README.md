@@ -14,6 +14,21 @@ This app transforms the Subsonic Player into a production-quality webOS TV appli
   - Install from: https://webostv.developer.lge.com/sdk/installation/
   - Required tools: `ares-package`, `ares-install`, `ares-launch`
 
+## 📺 Supported webOS Versions
+
+This app supports **webOS 4.5+** (Chromium 68+), which covers LG TVs from 2018 onwards.
+
+| webOS Version | Chromium Version | LG TV Year | Status |
+|---------------|------------------|------------|--------|
+| webOS 4.5     | Chromium 68      | 2018-2019  | ✅ Supported |
+| webOS 5.x     | Chromium 79      | 2020       | ✅ Supported |
+| webOS 6.x     | Chromium 87      | 2021       | ✅ Supported |
+| webOS 22+     | Chromium 94+     | 2022+      | ✅ Supported |
+
+**Note:** The build includes polyfills and uses ES2017 target to ensure compatibility with older Chromium versions. Hash-based routing is used for webOS builds to support the `file://` protocol.
+
+If you experience issues on older TVs, please [open an issue](https://github.com/pando85/subsonic-player-webos/issues).
+
 ## 🚀 Quick Start
 
 ### 1. Build for webOS

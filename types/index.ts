@@ -1,5 +1,11 @@
 import type { NuxtLinkProps } from 'nuxt/app';
 
+declare module '#app' {
+  interface NuxtApp {
+    $api: (url: string, options?: Record<string, unknown>) => Promise<unknown>;
+  }
+}
+
 export type ButtonLinkIs = 'button' | LinkIs;
 
 export interface ButtonProps {

@@ -180,8 +180,8 @@ export default defineNuxtPlugin((nuxtApp) => {
    * vs a list/discovery view
    */
   function isOnDetailPage(): boolean {
-    const path = window.location.pathname;
-    // Individual detail pages (not plural)
+    const route = useRoute();
+    const path = route.path;
     return (
       path.startsWith('/album/') ||
       path.startsWith('/artist/') ||

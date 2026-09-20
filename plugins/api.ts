@@ -33,7 +33,7 @@ export default defineNuxtPlugin(() => {
         };
       }
     },
-  });
+  }) as (url: string, options?: Record<string, unknown>) => Promise<unknown>;
 
   return {
     provide: {
