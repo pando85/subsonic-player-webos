@@ -27,9 +27,7 @@ export default defineNuxtConfig({
     baseURL: './',
     buildAssetsDir: '_nuxt/',
     head: {
-      script: isWebOSBuild
-        ? [{ children: '', src: './polyfills.js' }]
-        : [],
+      script: isWebOSBuild ? [{ src: './polyfills.js' }] : [],
     },
   },
   builder: 'vite',
@@ -41,7 +39,6 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false,
     payloadExtraction: false,
-    resetAsyncDataToUndefined: false,
   },
   features: {
     inlineStyles: process.env.WEBOS_BUILD !== 'true',
@@ -99,7 +96,7 @@ export default defineNuxtConfig({
   vite: {
     build: {
       assetsDir: '_nuxt',
-      target: isWebOSBuild ? 'chrome68' : undefined,
+      target: isWebOSBuild ? 'es2017' : undefined,
     },
   },
 });
